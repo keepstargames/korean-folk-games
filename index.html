@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>한국 전통놀이 · Korean Folk Games — 브라우저에서 바로</title>
+<meta name="description" content="한국 전통놀이를 웹게임으로. 설치 없이 브라우저에서 바로 즐기는 윷놀이. Classic Korean folk games, playable right in your browser — no install.">
+<meta property="og:title" content="한국 전통놀이 · Korean Folk Games">
+<meta property="og:description" content="설치 없이 브라우저에서 바로 즐기는 한국 전통놀이. Classic Korean folk games in your browser.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#181410">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b8382a'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23f2e8d5' font-family='serif'%3E놀%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#26201b;
+  --ink-deep:#181410;
+  --hanji:#f2e8d5;
+  --hanji-dim:#e6d9bf;
+  --cheong:#2c4f8f;
+  --cheong-lite:#4a6fb0;
+  --hong:#b8382a;
+  --hong-lite:#d3564a;
+  --seal:#c9972f;
+  --line:#3a322a;
+  --serif:'Song Myung','Nanum Myeongjo','Noto Serif KR','Apple SD Gothic Neo','Malgun Gothic',serif;
+  --sans:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','맑은 고딕',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink-deep);
+  background-image:radial-gradient(ellipse at 50% -20%, #2a231c 0%, #181410 65%);
+  background-attachment:fixed;
+  color:var(--hanji);
+  font-family:var(--sans);
+  word-break:keep-all;overflow-wrap:break-word;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100dvh;
+  padding:12px 12px 32px;
+}
+
+/* ---------- header ---------- */
+header{
+  width:100%;max-width:920px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 4px 12px;gap:8px;
+}
+.title{display:flex;align-items:center;gap:12px;min-width:0}
+.seal{
+  width:44px;height:44px;border-radius:8px;flex:none;
+  background:linear-gradient(135deg,#c03a2b,#8f2417);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);
+  font-size:22px;color:#f7ecd8;
+  box-shadow:inset 0 0 0 2px rgba(247,236,216,.35), 0 2px 8px rgba(0,0,0,.5);
+  transform:rotate(-3deg);
+}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(20px,4vw,30px);letter-spacing:4px}
+h1 small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:3px;color:#9a8e79;margin-top:2px}
+#btnLang{
+  height:44px;min-width:44px;border-radius:22px;padding:0 16px;flex:none;
+  background:transparent;border:1.5px solid rgba(242,232,213,.4);
+  color:var(--hanji);font-family:var(--sans);font-size:13px;letter-spacing:1px;
+  cursor:pointer;transition:border-color .2s,color .2s;
+}
+#btnLang:hover{border-color:var(--seal);color:var(--seal)}
+
+/* ---------- hero ---------- */
+main{width:100%;max-width:920px}
+.hero{text-align:center;padding:26px 8px 30px}
+.hero h2{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(26px,5.5vw,40px);letter-spacing:5px;line-height:1.35;
+  color:#efe4cd;
+}
+.hero .rule{
+  width:60px;height:1px;margin:18px auto;
+  background:linear-gradient(90deg,transparent,var(--seal),transparent);
+}
+.hero p{
+  font-size:clamp(13px,2.4vw,15px);line-height:1.8;color:#9a8e79;
+  max-width:32em;margin:0 auto;
+}
+
+/* ---------- section label ---------- */
+.sec-label{
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;letter-spacing:3px;color:#9a8e79;
+  margin:8px 4px 14px;
+}
+.sec-label::after{content:"";flex:1;height:1px;background:rgba(242,232,213,.12)}
+
+/* ---------- game grid ---------- */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+}
+@media(max-width:640px){ .grid{grid-template-columns:1fr} }
+
+.game-card{
+  display:block;text-decoration:none;color:var(--ink);
+  background:var(--hanji);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(120,95,60,.06) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 64%, rgba(120,95,60,.05) 0 2px, transparent 3px),
+    radial-gradient(circle at 45% 85%, rgba(120,95,60,.05) 0 1px, transparent 2px),
+    linear-gradient(180deg,#f4ebd9,#ecdfc6);
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(58,50,42,.25), inset 0 0 60px rgba(120,95,60,.12);
+  padding:20px 20px 18px;
+  position:relative;overflow:hidden;
+  transition:transform .18s ease, box-shadow .25s ease;
+}
+.game-card::before{
+  content:"";position:absolute;inset:0;
+  border-radius:10px;pointer-events:none;
+  box-shadow:inset 0 0 0 0 var(--seal);
+  transition:box-shadow .25s ease;
+}
+.game-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 16px 40px rgba(0,0,0,.62), inset 0 0 0 1px rgba(58,50,42,.25), inset 0 0 60px rgba(120,95,60,.12);
+}
+.game-card:hover::before{box-shadow:inset 0 0 0 2px var(--seal)}
+.game-card:focus-visible{outline:3px solid var(--seal);outline-offset:3px}
+
+.card-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.card-seal{
+  width:46px;height:46px;border-radius:8px;flex:none;
+  background:linear-gradient(135deg,#c03a2b,#8f2417);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:24px;color:#f7ecd8;
+  box-shadow:inset 0 0 0 2px rgba(247,236,216,.35), 0 2px 8px rgba(0,0,0,.35);
+  transform:rotate(-3deg);
+}
+.card-name{min-width:0}
+.card-name h3{
+  font-family:var(--serif);font-weight:400;
+  font-size:22px;letter-spacing:3px;color:var(--ink);
+}
+.card-name .en{
+  font-size:11px;letter-spacing:2px;color:#8a7b60;margin-top:3px;
+}
+.card-tag{
+  font-size:13px;color:#8a6a1c;font-weight:bold;
+  margin-bottom:8px;letter-spacing:.5px;
+}
+.card-desc{
+  font-size:13.5px;line-height:1.75;color:#5c5040;
+  margin-bottom:16px;
+}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{
+  border:1px solid rgba(58,50,42,.3);border-radius:20px;
+  padding:4px 11px;font-size:11.5px;color:#6d5f4a;letter-spacing:.5px;
+}
+.card-go{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;border-radius:8px;
+  background:var(--ink);color:var(--hanji);
+  font-size:15px;letter-spacing:3px;
+  transition:background .2s;
+}
+.game-card:hover .card-go{background:#3a3128}
+.card-go .arrow{transition:transform .2s}
+.game-card:hover .card-go .arrow{transform:translateX(3px)}
+
+/* ---------- footer ---------- */
+footer{
+  width:100%;max-width:920px;
+  margin-top:34px;padding:18px 4px 0;
+  border-top:1px solid rgba(242,232,213,.1);
+  text-align:center;
+}
+footer p{font-size:12px;color:#7d715c;letter-spacing:1px;line-height:1.9}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none !important;animation:none !important}
+  .game-card:hover{transform:none}
+  .game-card:hover .card-go .arrow{transform:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <div class="seal">놀</div>
+    <h1><span id="hTitle">한국 전통놀이</span><small id="hSub">KOREAN FOLK GAMES</small></h1>
+  </div>
+  <button id="btnLang">EN</button>
+</header>
+
+<main>
+  <section class="hero">
+    <h2 id="heroH">놀이는 오래됐고<br>판은 새것입니다</h2>
+    <div class="rule"></div>
+    <p id="heroP">할머니 댁 마루에서 하던 그 놀이를 브라우저로 옮겼습니다. 설치도 로그인도 없이, 열면 바로 한 판.</p>
+  </section>
+
+  <div class="sec-label" id="secLabel">게임</div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <p id="footNote">외부 이미지도 오디오 파일도 없이, 코드로만 그리고 소리 냅니다.</p>
+</footer>
+
+<script>
+/* ================= i18n ================= */
+const L={
+ko:{
+  title:'한국 전통놀이', sub:'KOREAN FOLK GAMES',
+  heroH:'놀이는 오래됐고<br>판은 새것입니다',
+  heroP:'할머니 댁 마루에서 하던 그 놀이를 브라우저로 옮겼습니다. 설치도 로그인도 없이, 열면 바로 한 판.',
+  secLabel:'게임',
+  play:'놀러 가기',
+  footNote:'외부 이미지도 오디오 파일도 없이, 코드로만 그리고 소리 냅니다.',
+},
+en:{
+  title:'Korean Folk Games', sub:'한국 전통놀이',
+  heroH:'Old games,<br>new board',
+  heroP:'The games Korean families have played for centuries, rebuilt for the browser. No install, no login — just open and play.',
+  secLabel:'GAMES',
+  play:'Play',
+  footNote:'Every image and sound here is drawn and synthesised in code — no asset files.',
+}};
+
+/* ================= game list ================= */
+/* 게임을 추가하려면 이 배열에 항목 하나만 더 넣으면 됩니다. */
+const GAMES=[
+  {
+    id:'yutnori',
+    href:'games/yutnori/index.html',
+    seal:'윷',
+    ko:{
+      name:'윷놀이', en:'YUT NORI',
+      tag:'10분이면 한 판',
+      desc:'혼자서는 AI와, 둘이서는 한 기기로. 빽도·지름길·잡기까지 제대로 넣고, 지금 누가 이기고 있는지 승률 막대로 보여줍니다.',
+      chips:['AI 대전','2인 대전','보드게임','10분'],
+    },
+    en:{
+      name:'Yut Nori', en:'윷놀이',
+      tag:'A full game in under 10 minutes',
+      desc:'Play solo against the AI or two-player on one device. Back-do, shortcuts and captures all included — with a live bar showing who is winning.',
+      chips:['vs AI','2 players','Board','10 min'],
+    },
+  },
+];
+
+let lang='ko';
+const t=k=>L[lang][k];
+
+/* ================= render ================= */
+function renderGames(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML=GAMES.map(g=>{
+    const d=g[lang];
+    return '<a class="game-card" href="'+g.href+'">'+
+      '<div class="card-top">'+
+        '<div class="card-seal" aria-hidden="true">'+g.seal+'</div>'+
+        '<div class="card-name">'+
+          '<h3>'+d.name+'</h3>'+
+          '<div class="en">'+d.en+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="card-tag">'+d.tag+'</div>'+
+      '<div class="card-desc">'+d.desc+'</div>'+
+      '<div class="chips">'+d.chips.map(c=>'<span class="chip">'+c+'</span>').join('')+'</div>'+
+      '<div class="card-go">'+t('play')+'<span class="arrow">→</span></div>'+
+    '</a>';
+  }).join('');
+}
+
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.title=lang==='ko'
+    ? '한국 전통놀이 · Korean Folk Games — 브라우저에서 바로'
+    : 'Korean Folk Games · 한국 전통놀이 — Play in your browser';
+  document.getElementById('hTitle').textContent=t('title');
+  document.getElementById('hSub').textContent=t('sub');
+  document.getElementById('heroH').innerHTML=t('heroH');
+  document.getElementById('heroP').textContent=t('heroP');
+  document.getElementById('secLabel').textContent=t('secLabel');
+  document.getElementById('footNote').textContent=t('footNote');
+  document.getElementById('btnLang').textContent=lang==='ko'?'EN':'한국어';
+  renderGames();
+}
+
+document.getElementById('btnLang').addEventListener('click',()=>{
+  lang=(lang==='ko')?'en':'ko';
+  applyLang();
+});
+
+applyLang();
+</script>
+</body>
+</html>
