@@ -25,8 +25,9 @@
   --seal:#c9972f;
   --line:#3a322a;
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+html,body{height:100%;overscroll-behavior:none}
 body{
   background:var(--ink-deep);
   background-image:radial-gradient(ellipse at 50% -20%, #2a231c 0%, #181410 65%);
@@ -62,7 +63,12 @@ main{
   display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;
   align-items:start;
 }
-@media(max-width:760px){ main{grid-template-columns:1fr} }
+@media(max-width:760px){
+  main{grid-template-columns:1fr}
+  #statusCard{order:1} #btnThrow{order:2} #btnEnter{order:3} #chipsCard{order:4}
+  #probCard{order:5} #cardP{order:6} #cardA{order:7} #logCard{order:8}
+  .chip{min-height:44px;padding:10px 18px;font-size:15px}
+}
 
 /* ---------- board ---------- */
 .board-wrap{
@@ -296,7 +302,7 @@ button:disabled{opacity:.35;cursor:default}
   </div>
 
   <div class="panel">
-    <div class="card">
+    <div class="card" id="probCard">
       <div class="prob-label-row">
         <div class="prob-title" id="probTitle">승률 예측</div>
         <div class="prob-calc" id="probCalc">계산 중…</div>
@@ -317,17 +323,17 @@ button:disabled{opacity:.35;cursor:default}
       <div class="horse-row" id="horsesA"></div>
     </div>
 
-    <div class="card"><div class="status" id="status"></div></div>
+    <div class="card" id="statusCard"><div class="status" id="status"></div></div>
 
     <button id="btnThrow"></button>
     <button id="btnEnter"></button>
 
-    <div class="card">
+    <div class="card" id="chipsCard">
       <div class="chips-label" id="chipsLabel"></div>
       <div class="chips" id="chips"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="logCard">
       <div class="log-label" id="logLabel"></div>
       <div class="log" id="log"></div>
     </div>
@@ -461,7 +467,9 @@ en:{
     '<li><span class="num">7</span><span><b>Win</b> — first to carry every piece all the way around and out wins. Watch the win-chance bar swing!</span></li>',
   helpClose:'Got it',
 }};
-let lang='ko';
+/* ?lang= 이 있으면 그것, 없으면 영어. 허브(index.html)와 같은 규칙 — 한쪽만 바꾸지 말 것. */
+const _qp=new URLSearchParams(location.search).get('lang');
+let lang=(_qp==='en'||_qp==='ko')?_qp:'en';
 const t=(k,...a)=>{const v=L[lang][k];return typeof v==='function'?v(...a):v;};
 
 /* ================= board geometry ================= */
@@ -677,6 +685,13 @@ function updateWinProb(){
 
 /* ================= sound (WebAudio, zero assets) ================= */
 let audioCtx=null, muted=false;
+/* 진동. 음소거 시엔 울리지 않는다 — 소리를 끄는 이유는 대개 "조용히 있어야 해서"라
+   진동만 남으면 끈 의미가 없다. prefers-reduced-motion도 존중한다. */
+const vib=p=>{
+  if(muted) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){}
+};
 function ac(){
   if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
   if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
@@ -866,6 +881,7 @@ function renderPieces(){
       g.classList.add('node-clickable');
       const col=tm===0?'var(--cheong)':'var(--hong)';
       const lite=tm===0?'#4a6fb0':'#d3564a';
+      g.appendChild(el('circle',{cx:c.x,cy:c.y,r:34,fill:'rgba(0,0,0,0)'}));
       g.appendChild(el('circle',{cx:c.x,cy:c.y,r:16,fill:col,stroke:'#1d160c','stroke-width':2}));
       g.appendChild(el('circle',{cx:c.x-4,cy:c.y-5,r:5,fill:lite,opacity:.7}));
       if(cnt>1){
@@ -911,6 +927,7 @@ function renderRings(){
     if(dest==='finish'){ gx=592; gy=592; label=t('goal'); }
     else{ gx=COORD[dest].x; gy=COORD[dest].y; label=null; }
     const g=el('g',{}); g.classList.add('ghost');
+    g.appendChild(el('circle',{cx:gx,cy:gy,r:34,fill:'rgba(0,0,0,0)'}));
     const body=el('circle',{cx:gx,cy:gy,r:17,fill:ghostFill,stroke:'#c9972f','stroke-width':2.5,'stroke-dasharray':'5 4'});
     body.classList.add('body'); g.appendChild(body);
     const tx=el('text',{x:gx,y:gy+(label?4:5),'text-anchor':'middle','font-size':label?10:14,'font-weight':'bold',fill:'#8a6a1c','font-family':"'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR',sans-serif"});
@@ -985,11 +1002,11 @@ function checkWin(){
       if(mode==='2p'){
         document.getElementById('endTitle').textContent=t('winTeam',tm);
         document.getElementById('endSub').textContent=t('endSub2p',tm,dur);
-        sfx('win');
+        sfx('win'); vib([80,50,80]);
       }else{
         document.getElementById('endTitle').textContent=tm===0?t('win'):t('lose');
         document.getElementById('endSub').textContent=tm===0?t('endWin',dur):t('endLose',dur);
-        sfx(tm===0?'win':'lose');
+        sfx(tm===0?'win':'lose'); vib(tm===0?[80,50,80]:[50]);
       }
       document.getElementById('endModal').classList.remove('hidden');
       renderNames();
@@ -1001,8 +1018,8 @@ function checkWin(){
   return false;
 }
 async function afterApply(res){
-  if(res.finished){ addLog('lgFinish', state.turn, res.moved); sfx('finish'); }
-  if(res.captured){ addLog('lgCapture', state.turn); sfx('capture'); }
+  if(res.finished){ addLog('lgFinish', state.turn, res.moved); sfx('finish'); vib(40); }
+  if(res.captured){ addLog('lgCapture', state.turn); sfx('capture'); vib(60); }
   updateWinProb();
   if(checkWin()) return true;
   if(res.captured) state.canThrow=true;
