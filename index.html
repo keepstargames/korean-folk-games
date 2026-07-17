@@ -200,7 +200,7 @@ footer p{font-size:12px;color:#7d715c;letter-spacing:1px;line-height:1.9}
   <section class="hero">
     <h2 id="heroH">던지고, 튕기고,<br>차고, 이겨라!</h2>
     <div class="rule"></div>
-    <p id="heroP">설치도 가입도 없어요. 누르면 바로 한 판!</p>
+    <p id="heroP">설치 없어요. 누르면 바로 한 판!</p>
   </section>
 
   <div class="sec-label" id="secLabel">게임</div>
@@ -217,7 +217,7 @@ const L={
 ko:{
   title:'한국 전통놀이', sub:'KOREAN FOLK GAMES',
   heroH:'던지고, 튕기고,<br>차고, 이겨라!',
-  heroP:'설치도 가입도 없어요. 누르면 바로 한 판!',
+  heroP:'설치 없어요. 누르면 바로 한 판!',
   secLabel:'게임',
   play:'놀러 가기',
   footNote:'폰에서도, 컴퓨터에서도. 무료로 언제든지.',
@@ -225,7 +225,7 @@ ko:{
 en:{
   title:'Korean Folk Games', sub:'한국 전통놀이',
   heroH:'Toss it. Flick it.<br>Kick it. Win it.',
-  heroP:'No install, no sign-up. Just tap and play!',
+  heroP:'No install. Just tap and play!',
   secLabel:'GAMES',
   play:'Play',
   footNote:'On your phone or your computer. Free, anytime.',
@@ -253,7 +253,12 @@ const GAMES=[
   },
 ];
 
-let lang='ko';
+/* 언어 시작값: ?lang= 이 있으면 그것, 없으면 영어.
+   해외 HTML5 포털(CrazyGames 등)이 주 배포처라 영어를 기본으로 둔다.
+   게임 쪽(games/yutnori/index.html)과 규칙이 같아야 허브와 게임의
+   언어가 어긋나지 않는다 — 한쪽만 바꾸지 말 것. */
+const _qp=new URLSearchParams(location.search).get('lang');
+let lang=(_qp==='en'||_qp==='ko')?_qp:'en';
 const t=k=>L[lang][k];
 
 /* ================= render ================= */
@@ -261,7 +266,9 @@ function renderGames(){
   const grid=document.getElementById('grid');
   grid.innerHTML=GAMES.map(g=>{
     const d=g[lang];
-    return '<a class="game-card" href="'+g.href+'">'+
+    /* 지금 보고 있는 언어를 게임으로 넘긴다. 안 넘기면 허브에서 한국어로
+       바꿔놓고 게임에 들어갔을 때 영어로 시작해 버린다. */
+    return '<a class="game-card" href="'+g.href+'?lang='+lang+'">'+
       '<div class="card-top">'+
         '<div class="card-seal" aria-hidden="true">'+g.seal+'</div>'+
         '<div class="card-name">'+
