@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>무궁화 꽃이 피었습니다 · Red Light, Green Light</title>
+<meta name="description" content="무궁화 꽃이 피었습니다 — 술래가 돌아보기 전에 멈추는 반응 게임. Korean 'red light, green light': hold to run, freeze before the tagger turns.">
+<meta property="og:title" content="무궁화 꽃이 피었습니다 · Red Light, Green Light">
+<meta property="og:description" content="술래가 노래하는 동안 달리고, 돌아보기 전에 멈추세요. Hold to run while the tagger chants — freeze before it turns around.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#181410">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b8382a'/%3E%3Ctext x='32' y='45' font-size='32' text-anchor='middle' fill='%23f2e8d5' font-family='serif'%3E꽃%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#26201b;
+  --ink-deep:#181410;
+  --hanji:#f2e8d5;
+  --hanji-dim:#e6d9bf;
+  --cheong:#2c4f8f;
+  --cheong-lite:#4a6fb0;
+  --hong:#b8382a;
+  --hong-lite:#d3564a;
+  --seal:#c9972f;
+  --line:#3a322a;
+  --serif:'Song Myung','Nanum Myeongjo','Noto Serif KR','Apple SD Gothic Neo','Malgun Gothic',serif;
+  --sans:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','맑은 고딕',system-ui,sans-serif;
+  /* 신호등 의미색(초록=달려도 됨). 한지/먹 톤에 어울리는 이끼빛 초록만 하나 더한다. */
+  --go:#5c8a46;
+  --go-lite:#7aa85f;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  background:var(--ink-deep);
+  background-image:radial-gradient(ellipse at 50% -20%, #2a231c 0%, #181410 65%);
+  color:var(--hanji);
+  font-family:var(--sans);
+  word-break:keep-all;overflow-wrap:break-word;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100dvh;
+  padding:12px 12px 22px;
+  touch-action:manipulation;
+}
+
+/* ---------- header ---------- */
+header{
+  width:100%;max-width:560px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 2px 12px;gap:8px;
+}
+.title{display:flex;align-items:center;gap:11px;min-width:0}
+.seal{
+  width:44px;height:44px;border-radius:8px;flex:none;
+  background:linear-gradient(135deg,#c03a2b,#8f2417);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);
+  font-size:24px;color:#f7ecd8;
+  box-shadow:inset 0 0 0 2px rgba(247,236,216,.35), 0 2px 8px rgba(0,0,0,.5);
+  transform:rotate(-3deg);
+}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(16px,4.2vw,22px);letter-spacing:1px;line-height:1.15;min-width:0}
+h1 small{display:block;font-family:var(--sans);font-size:10px;letter-spacing:2px;color:#9a8e79;margin-top:3px;font-weight:400}
+.hdr-right{display:flex;align-items:center;gap:6px;flex:none}
+.hbtn{
+  height:44px;min-width:44px;border-radius:12px;padding:0;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:transparent;border:1.5px solid rgba(242,232,213,.4);
+  color:var(--hanji);font-family:var(--sans);font-size:16px;letter-spacing:1px;
+  cursor:pointer;transition:border-color .2s,color .2s;text-decoration:none;
+}
+.hbtn.wide{padding:0 12px;font-size:13px}
+.hbtn:hover{border-color:var(--seal);color:var(--seal)}
+.hbtn:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+
+/* ---------- main / hud ---------- */
+main{width:100%;max-width:560px;display:flex;flex-direction:column;gap:12px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pill{
+  display:flex;flex-direction:column;gap:1px;
+  padding:8px 16px;border-radius:12px;min-width:118px;
+  border:1.5px solid transparent;transition:background .25s,border-color .25s,box-shadow .25s;
+}
+.pill #pillMain{font-family:var(--serif);font-size:19px;letter-spacing:3px;line-height:1.1}
+.pill #pillSub{font-size:10.5px;letter-spacing:1px;opacity:.9}
+.pill.green{background:rgba(92,138,70,.18);border-color:var(--go);box-shadow:0 0 16px rgba(92,138,70,.22)}
+.pill.green #pillMain{color:var(--go-lite)}
+.pill.red{background:rgba(184,56,42,.2);border-color:var(--hong);box-shadow:0 0 18px rgba(184,56,42,.3)}
+.pill.red #pillMain{color:var(--hong-lite)}
+.pill.red #pillMain{animation:pillpulse .5s ease-in-out infinite alternate}
+@keyframes pillpulse{from{opacity:.72}to{opacity:1}}
+.lives{display:flex;align-items:center;gap:6px}
+.life{width:16px;height:16px;border-radius:50%;background:var(--cheong-lite);
+  box-shadow:inset 0 -2px 3px rgba(0,0,0,.4);transition:opacity .3s,transform .3s}
+.life.lost{background:transparent;border:1.5px solid rgba(242,232,213,.28);box-shadow:none;transform:scale(.82)}
+
+.bar-row{display:flex;align-items:center;gap:9px}
+.bar-cap{font-size:10px;letter-spacing:2px;color:#9a8e79;flex:none;width:34px}
+.bar-cap.r{text-align:right}
+.bar{flex:1;height:12px;border-radius:6px;background:rgba(242,232,213,.1);
+  border:1px solid rgba(242,232,213,.2);overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;
+  background:linear-gradient(180deg,var(--cheong-lite),var(--cheong));
+  border-right:2px solid rgba(242,232,213,.7);width:0%;transition:width .08s linear}
+
+/* ---------- field ---------- */
+.field-wrap{
+  border-radius:12px;overflow:hidden;position:relative;
+  box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 2px rgba(58,50,42,.4);
+  transition:box-shadow .25s;
+  touch-action:none;cursor:pointer;
+}
+.field-wrap.green{box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 2px var(--go), 0 0 22px rgba(92,138,70,.15)}
+.field-wrap.red{box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 2px var(--hong), 0 0 26px rgba(184,56,42,.28)}
+.field-wrap:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.field-wrap.shake{animation:shk .4s ease}
+@keyframes shk{0%,100%{transform:translateX(0)}18%{transform:translateX(-7px)}38%{transform:translateX(7px)}58%{transform:translateX(-5px)}78%{transform:translateX(4px)}}
+svg#field{display:block;width:100%;height:auto}
+#taggerG{transform-box:fill-box;transform-origin:center}
+#taggerG.turning{animation:turnflip .32s ease}
+@keyframes turnflip{0%{transform:scaleX(1)}45%{transform:scaleX(.14)}55%{transform:scaleX(.14)}100%{transform:scaleX(1)}}
+
+/* ---------- chant ---------- */
+.chant{
+  text-align:center;font-family:var(--serif);
+  font-size:clamp(20px,6vw,28px);letter-spacing:2px;line-height:1.3;
+  min-height:1.4em;
+}
+.syl{opacity:.26;transition:opacity .12s,color .12s,text-shadow .12s;display:inline-block}
+.syl.gap{width:.5em}
+.syl.lit{opacity:1;color:var(--seal);text-shadow:0 0 10px rgba(201,151,47,.55)}
+.syl.last.lit{color:var(--hong-lite);text-shadow:0 0 14px rgba(211,86,74,.7);transform:scale(1.08)}
+.gloss{text-align:center;font-size:11.5px;letter-spacing:1px;color:#9a8e79;margin-top:-4px}
+.status{
+  text-align:center;font-size:13.5px;line-height:1.5;color:#efe4cd;min-height:2.7em;
+  display:flex;align-items:center;justify-content:center;padding:0 6px;
+}
+.status b{color:var(--seal)}
+.status.warn b{color:var(--hong-lite)}
+
+/* ---------- hold button ---------- */
+.hold{
+  width:100%;min-height:74px;border:none;border-radius:14px;cursor:pointer;
+  font-family:var(--serif);font-size:22px;letter-spacing:4px;color:#122;
+  background:linear-gradient(180deg,var(--go-lite),var(--go));
+  box-shadow:0 6px 0 #3f6431, 0 10px 22px rgba(0,0,0,.4);
+  color:#f4f7ee;transition:transform .06s,box-shadow .12s,background .2s;
+  touch-action:none;
+}
+.hold small{display:block;font-family:var(--sans);font-size:12px;letter-spacing:1px;margin-top:3px;opacity:.9}
+.hold.holding{transform:translateY(5px);box-shadow:0 1px 0 #3f6431, 0 4px 12px rgba(0,0,0,.4);
+  background:linear-gradient(180deg,var(--go),#4a7439)}
+.hold.danger{background:linear-gradient(180deg,var(--hong-lite),var(--hong));box-shadow:0 6px 0 #7d251b, 0 10px 22px rgba(0,0,0,.4)}
+.hold.danger.holding{box-shadow:0 1px 0 #7d251b, 0 4px 12px rgba(0,0,0,.4)}
+.hold:focus-visible{outline:3px solid var(--seal);outline-offset:3px}
+.hold:disabled{opacity:.5;cursor:default}
+
+/* ---------- modals ---------- */
+.modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(16,12,9,.88);z-index:60;padding:18px;
+}
+.modal.hidden{display:none}
+.modal-box{
+  background:var(--hanji);color:var(--ink);
+  border-radius:12px;padding:26px 22px;max-width:440px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);
+  max-height:92dvh;overflow-y:auto;
+}
+.modal-box h2{font-family:var(--serif);font-weight:400;font-size:26px;letter-spacing:2px;margin-bottom:6px;line-height:1.25}
+.modal-box .sub{font-size:13px;color:#6d5f4a;letter-spacing:1px;margin-bottom:18px}
+.howto{list-style:none;text-align:left;margin-bottom:20px}
+.howto li{display:flex;gap:11px;margin-bottom:12px;font-size:14px;line-height:1.6;color:#443a2c}
+.howto .num{
+  flex:none;width:26px;height:26px;border-radius:50%;
+  background:var(--ink);color:var(--hanji);
+  display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:1px;
+}
+.howto b{color:var(--hong)}
+.howto .grn{color:#4a7439;font-weight:bold}
+.set-label{font-size:12px;letter-spacing:2px;color:#6d5f4a;margin:4px 0 9px}
+.opt-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.opt{
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  border-radius:8px;padding:11px 14px;font-size:14px;cursor:pointer;
+  font-family:var(--sans);min-height:44px;letter-spacing:1px;
+  transition:background .15s,color .15s;
+}
+.opt.sel{background:var(--ink);color:var(--hanji)}
+.diff-row{display:flex;gap:8px;justify-content:center;margin-bottom:6px}
+.diff{
+  flex:1;max-width:120px;padding:12px 0;border-radius:8px;font-size:15px;cursor:pointer;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  font-family:var(--sans);min-height:44px;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.diff.sel{background:var(--hong);border-color:var(--hong);color:var(--hanji);font-weight:bold}
+.diff-name{font-size:12.5px;color:#8a6a1c;margin-bottom:14px;min-height:17px}
+.go{width:100%;background:var(--ink);color:var(--hanji);font-size:17px;letter-spacing:3px;
+  padding:15px;border:none;border-radius:8px;cursor:pointer;font-family:var(--sans);min-height:52px}
+.go:focus-visible,.opt:focus-visible,.diff:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.footer-note{margin-top:13px;font-size:12px;color:#7d715c;letter-spacing:1px}
+#endEmoji{font-size:15px;color:#8a6a1c;letter-spacing:2px;margin-bottom:2px}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important}
+  .field-wrap.shake,#taggerG.turning,.pill.red #pillMain{animation:none !important}
+  .bar-fill{transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <div class="seal">꽃</div>
+    <h1><span id="hTitle">무궁화 꽃이 피었습니다</span><small id="hSub">RED LIGHT · GREEN LIGHT</small></h1>
+  </div>
+  <div class="hdr-right">
+    <button class="hbtn" id="btnSound" title="Sound" aria-label="Sound">🔊</button>
+    <button class="hbtn wide" id="btnLang">한국어</button>
+    <button class="hbtn" id="btnHelp" title="Help" aria-label="Help">?</button>
+    <a class="hbtn" id="btnBack" href="../../index.html" title="Back" aria-label="Back">←</a>
+  </div>
+</header>
+
+<main>
+  <div class="topbar">
+    <div class="pill green" id="statePill"><span id="pillMain"></span><span id="pillSub"></span></div>
+    <div class="lives" id="lives" aria-label="lives"></div>
+  </div>
+
+  <div class="bar-row">
+    <span class="bar-cap" id="capStart"></span>
+    <div class="bar"><div class="bar-fill" id="progFill"></div></div>
+    <span class="bar-cap r" id="capGoal"></span>
+  </div>
+
+  <div class="field-wrap green" id="fieldWrap" role="button" tabindex="0" aria-label="Play field — press and hold to run">
+    <svg id="field" viewBox="0 0 400 232" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#15110d"/>
+          <stop offset="1" stop-color="#2c2419"/>
+        </linearGradient>
+        <linearGradient id="grnd" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f4ebd9"/>
+          <stop offset="1" stop-color="#e2d1b0"/>
+        </linearGradient>
+      </defs>
+      <!-- sky -->
+      <rect x="0" y="0" width="400" height="152" fill="url(#sky)"/>
+      <!-- moon -->
+      <circle cx="60" cy="40" r="17" fill="#e9dcc2" opacity=".92"/>
+      <circle cx="60" cy="40" r="17" fill="none" stroke="#c9972f" stroke-width="1" opacity=".18"/>
+      <!-- stars -->
+      <g fill="#f2e8d5" opacity=".7">
+        <circle cx="120" cy="30" r="1.3"/><circle cx="175" cy="54" r="1"/>
+        <circle cx="228" cy="26" r="1.4"/><circle cx="270" cy="60" r="1"/>
+        <circle cx="150" cy="82" r="1"/><circle cx="330" cy="34" r="1.2"/>
+        <circle cx="95" cy="70" r="1"/><circle cx="300" cy="76" r="1"/>
+      </g>
+      <!-- ground -->
+      <rect x="0" y="150" width="400" height="82" fill="url(#grnd)"/>
+      <line x1="0" y1="150" x2="400" y2="150" stroke="#3a322a" stroke-width="1.5" opacity=".55"/>
+      <g fill="#a98f60" opacity=".35">
+        <circle cx="70" cy="178" r="1.6"/><circle cx="140" cy="200" r="1.4"/>
+        <circle cx="205" cy="176" r="1.5"/><circle cx="250" cy="210" r="1.4"/>
+        <circle cx="35" cy="205" r="1.5"/><circle cx="115" cy="216" r="1.3"/>
+      </g>
+      <!-- tree (behind tagger, far right) -->
+      <g>
+        <rect x="350" y="120" width="13" height="76" rx="4" fill="#5a4630"/>
+        <circle cx="356" cy="96" r="30" fill="#3f5a3a"/>
+        <circle cx="336" cy="110" r="20" fill="#456440"/>
+        <circle cx="376" cy="112" r="19" fill="#385231"/>
+        <circle cx="356" cy="82" r="20" fill="#4a6d43"/>
+      </g>
+      <!-- finish line -->
+      <line x1="300" y1="150" x2="300" y2="196" stroke="#c9972f" stroke-width="2.5" stroke-dasharray="5 5" opacity=".85"/>
+      <path d="M300 150 l14 5 -14 5 z" fill="#c9972f" opacity=".9"/>
+      <!-- tagger (술래) -->
+      <g id="taggerG">
+        <ellipse cx="322" cy="197" rx="13" ry="3.2" fill="#000" opacity=".2"/>
+        <!-- legs -->
+        <line x1="318" y1="176" x2="316" y2="196" stroke="#8f2417" stroke-width="6" stroke-linecap="round"/>
+        <line x1="326" y1="176" x2="328" y2="196" stroke="#8f2417" stroke-width="6" stroke-linecap="round"/>
+        <!-- body -->
+        <path d="M322 150 q11 2 10 16 l-2 12 h-16 l-2 -12 q-1 -14 10 -16 z" fill="#b8382a"/>
+        <line x1="311" y1="158" x2="308" y2="176" stroke="#b8382a" stroke-width="5.5" stroke-linecap="round"/>
+        <line x1="333" y1="158" x2="336" y2="176" stroke="#b8382a" stroke-width="5.5" stroke-linecap="round"/>
+        <!-- head -->
+        <circle cx="322" cy="140" r="9.5" fill="#d3564a"/>
+        <!-- topknot (상투) -->
+        <circle cx="322" cy="130" r="3.4" fill="#2a231c"/>
+        <line x1="322" y1="133" x2="322" y2="131" stroke="#2a231c" stroke-width="2"/>
+        <!-- face (shown when watching / red) -->
+        <g id="taggerEyes" opacity="0">
+          <circle cx="318.5" cy="140" r="1.7" fill="#241a12"/>
+          <circle cx="325.5" cy="140" r="1.7" fill="#241a12"/>
+          <path d="M315 135 l5 2" stroke="#241a12" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M329 135 l-5 2" stroke="#241a12" stroke-width="1.4" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- runner (you) -->
+      <g id="runnerG" transform="translate(46,196)">
+        <ellipse id="rshadow" cx="0" cy="1" rx="12" ry="3" fill="#000" opacity=".18"/>
+        <line id="legA" x1="0" y1="-22" x2="3" y2="0" stroke="#2c4f8f" stroke-width="5.5" stroke-linecap="round"/>
+        <line id="legB" x1="0" y1="-22" x2="-3" y2="0" stroke="#2c4f8f" stroke-width="5.5" stroke-linecap="round"/>
+        <line id="armA" x1="0" y1="-38" x2="6" y2="-30" stroke="#4a6fb0" stroke-width="4.5" stroke-linecap="round"/>
+        <line x1="0" y1="-44" x2="0" y2="-22" stroke="#2c4f8f" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="0" cy="-51" r="7.5" fill="#2c4f8f"/>
+        <circle cx="2.5" cy="-53" r="2.6" fill="#4a6fb0" opacity=".8"/>
+      </g>
+      <!-- red tint -->
+      <rect id="tint" x="0" y="0" width="400" height="232" fill="#b8382a" opacity="0" pointer-events="none"/>
+    </svg>
+  </div>
+
+  <div class="chant" id="chant"></div>
+  <div class="gloss" id="gloss"></div>
+  <div class="status" id="status"></div>
+
+  <button class="hold" id="btnHold" aria-pressed="false"><span id="holdMain"></span><small id="holdSub"></small></button>
+</main>
+
+<div class="modal" id="startModal"><div class="modal-box" id="startBox"></div></div>
+<div class="modal hidden" id="helpModal"><div class="modal-box" id="helpBox"></div></div>
+<div class="modal hidden" id="endModal">
+  <div class="modal-box">
+    <div id="endEmoji"></div>
+    <h2 id="endTitle"></h2>
+    <div class="sub" id="endSub"></div>
+    <button class="go" id="btnAgain"></button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= i18n ================= */
+/* 챈트 음절(고정 한국어). 뜻은 gloss로 보여준다. */
+const SYL=['무','궁','화','꽃','이','피','었','습','니','다'];
+
+const L={
+ko:{
+  title:'무궁화 꽃이 피었습니다', sub:'RED LIGHT · GREEN LIGHT',
+  run:'달려!', freeze:'멈춰!',
+  lookaway:'술래가 안 봐요', watching:'술래가 봐요!',
+  capStart:'출발', capGoal:'나무',
+  glossChant:'"무궁화 꽃이 피었습니다" — 무궁화 꽃이 피었습니다',
+  holdRun:'꾹 눌러 달리기', holdSub:'누르는 동안 달려요',
+  holdRunning:'달리는 중…', holdSubGo:'돌아보기 전에 떼세요!',
+  holdStop:'멈춰!', holdSubStop:'지금은 움직이지 마세요',
+  sGreen:'지금! <b>꾹 눌러</b> 달리고, 노래가 끝나기 전에 손을 떼요.',
+  sRed:'<b>멈춰!</b> 술래가 돌아봤어요. 가만히!',
+  sCaught:'<b>들켰다!</b> 조금 뒤로 밀렸어요 — 다시 준비하세요.',
+  sReady:'술래가 노래를 시작해요…',
+  /* setup */
+  startH:'무궁화 꽃이 피었습니다', startSub:'돌아보기 전에 멈추는 반응 놀이',
+  startSteps:'<li><span class="num">1</span><span>술래가 <b>"무궁화 꽃이 피었습니다"</b>를 부르는 동안 <span class="grn">꾹 눌러</span> 달려요.</span></li>'+
+    '<li><span class="num">2</span><span>노래가 끝나면 술래가 <b>홱 돌아봐요</b>. 그 전에 손을 떼고 <b>멈추세요</b>.</span></li>'+
+    '<li><span class="num">3</span><span>발이 완전히 안 멈추면(미끄러지는 관성!) <b>들켜요</b>. 마지막 글자에서 미리 떼세요.</span></li>'+
+    '<li><span class="num">4</span><span>술래(나무)에 <b>먼저 닿으면 승리!</b></span></li>',
+  diffLabel:'난이도', diffNames:['쉬움','보통','어려움'],
+  diffDesc:['노래가 느리고, 걸리는 판정이 너그러워요.','기본 속도와 판정.','노래가 빠르고 들쭉날쭉, 판정이 엄격해요.'],
+  livesLabel:'목숨', life1:'1 · 단판', life3:'3', life5:'5',
+  distLabel:'거리', distNames:['가까이','보통','멀리'],
+  startBtn:'놀러 가기', startFoot:'폰에서는 화면 아무 데나 눌러도 달려요',
+  /* help */
+  helpH:'노는 법', helpSub:'달리고 → 노래 끝나기 전에 멈추기',
+  helpSteps:'<li><span class="num">1</span><span><b>달리기</b> — <span class="grn">달려!</span> 상태(초록)일 때 큰 버튼이나 화면을 <b>꾹 누르면</b> 파란 내가 앞으로 달려요.</span></li>'+
+    '<li><span class="num">2</span><span><b>멈추기</b> — 노래가 끝나 <span class="grn">멈춰!</span>(빨강)가 되면 술래가 돌아봐요. 그때 <b>움직이고 있으면 들켜요.</b></span></li>'+
+    '<li><span class="num">3</span><span><b>관성</b> — 손을 떼도 살짝 미끄러져요. 마지막 글자쯤 <b>미리</b> 떼야 딱 멈춥니다.</span></li>'+
+    '<li><span class="num">4</span><span><b>난이도</b> — 어려울수록 노래가 빠르고 들쭉날쭉하며, 아주 조금만 움직여도 걸려요.</span></li>'+
+    '<li><span class="num">5</span><span><b>승리</b> — 걸리지 않고 술래(나무)에 먼저 닿으면 이겨요. 목숨을 다 쓰면 끝!</span></li>',
+  helpClose:'알겠어요',
+  /* result */
+  winTitle:'나무 도착!', winSub:'술래를 잡았어요 — 승리! 🎉',
+  loseTitle:'들켰다!', loseSub:'움직이다 술래에게 걸렸어요.',
+  winEmoji:'승 리', loseEmoji:'술래에게 들킴',
+  again:'다시 하기',
+},
+en:{
+  title:'Red Light, Green Light', sub:'무궁화 꽃이 피었습니다',
+  run:'RUN!', freeze:'FREEZE!',
+  lookaway:'Tagger looking away', watching:'Tagger is watching!',
+  capStart:'Start', capGoal:'Tree',
+  glossChant:'"Mugunghwa kkochi pieotseumnida" — the rose of Sharon has bloomed',
+  holdRun:'HOLD to run', holdSub:'run while you hold',
+  holdRunning:'Running…', holdSubGo:'let go before it turns!',
+  holdStop:'FREEZE!', holdSubStop:'do not move now',
+  sGreen:'Go! <b>Hold</b> to run — then let go before the chant ends.',
+  sRed:'<b>Freeze!</b> The tagger turned around. Hold still!',
+  sCaught:'<b>Caught!</b> Knocked back a little — get ready again.',
+  sReady:'The tagger starts to chant…',
+  /* setup */
+  startH:'Red Light, Green Light', startSub:'A Korean freeze-in-time reaction game',
+  startSteps:'<li><span class="num">1</span><span><span class="grn">Hold</span> to run while the tagger chants <b>"Mugunghwa kkochi pieotseumnida."</b></span></li>'+
+    '<li><span class="num">2</span><span>When the chant ends the tagger <b>spins around</b>. Let go and <b>freeze</b> before it does.</span></li>'+
+    '<li><span class="num">3</span><span>If your feet are still sliding (momentum!) you get <b>caught</b>. Release early — around the last syllable.</span></li>'+
+    '<li><span class="num">4</span><span>Reach the tagger by the <b>tree first to win!</b></span></li>',
+  diffLabel:'DIFFICULTY', diffNames:['Easy','Normal','Hard'],
+  diffDesc:['Slow chant, forgiving catch.','Standard speed and catch.','Fast, jittery chant, strict catch.'],
+  livesLabel:'LIVES', life1:'1 · Sudden death', life3:'3', life5:'5',
+  distLabel:'DISTANCE', distNames:['Short','Normal','Long'],
+  startBtn:'Play', startFoot:'On a phone, hold anywhere on the field to run',
+  /* help */
+  helpH:'How to play', helpSub:'Run → freeze before the chant ends',
+  helpSteps:'<li><span class="num">1</span><span><b>Run</b> — while it says <span class="grn">RUN!</span> (green), <b>press and hold</b> the big button or the field and your blue runner dashes forward.</span></li>'+
+    '<li><span class="num">2</span><span><b>Freeze</b> — when the chant ends it turns <span class="grn">FREEZE!</span> (red) and the tagger looks back. Being in motion then means <b>caught.</b></span></li>'+
+    '<li><span class="num">3</span><span><b>Momentum</b> — you glide a little after releasing, so let go <b>early</b> (around the last syllable) to fully stop in time.</span></li>'+
+    '<li><span class="num">4</span><span><b>Difficulty</b> — harder means a faster, jumpier chant and only the tiniest motion gets you caught.</span></li>'+
+    '<li><span class="num">5</span><span><b>Win</b> — reach the tagger by the tree without being caught. Run out of lives and it is over!</span></li>',
+  helpClose:'Got it',
+  /* result */
+  winTitle:'You made it!', winSub:'You reached the tree — you win! 🎉',
+  loseTitle:'Caught!', loseSub:'You were still moving when the tagger turned.',
+  winEmoji:'V I C T O R Y', loseEmoji:'CAUGHT BY THE TAGGER',
+  again:'Play again',
+}};
+
+const _qp=new URLSearchParams(location.search).get('lang');
+let lang=(_qp==='en'||_qp==='ko')?_qp:'en';
+const t=(k,...a)=>{const v=L[lang][k];return typeof v==='function'?v(...a):v;};
+
+/* ================= difficulty / tuning ================= */
+/* 시간 ms, 속도는 거리단위/초. distance는 90/140/190 중 하나. */
+const DIFF={
+  easy:  { sylBase:360, sylJit:0.12, turnDelay:[720,980], maxSpeed:26, accel:80,  decel:175, catchVel:8,   look:[850,1050], rush:false },
+  normal:{ sylBase:290, sylJit:0.28, turnDelay:[460,720], maxSpeed:30, accel:95,  decel:105, catchVel:4,   look:[780,980],  rush:false },
+  hard:  { sylBase:225, sylJit:0.5,  turnDelay:[300,540], maxSpeed:35, accel:115, decel:70,  catchVel:2,   look:[720,900],  rush:true  },
+};
+const DIST={0:90, 1:140, 2:190};
+
+let difficulty='normal', livesSel=3, distSel=1;
+
+/* geometry */
+const startX=46, goalX=298, baseY=196;
+
+/* ================= sound (WebAudio, zero assets) ================= */
+let audioCtx=null, muted=false;
+const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const vib=p=>{ if(muted||reduced())return; try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} };
+function ac(){
+  if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq,dur,type,vol,when,slide){
+  const c=ac(); if(!c) return;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,c.currentTime+when);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide,c.currentTime+when+dur);
+  g.gain.setValueAtTime(0.0001,c.currentTime+when);
+  g.gain.exponentialRampToValueAtTime(vol,c.currentTime+when+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+when+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+when); o.stop(c.currentTime+when+dur+0.05);
+}
+function noise(dur,vol,f0,f1,q){
+  const c=ac(); if(!c) return;
+  const len=Math.max(1,Math.floor(c.sampleRate*dur)), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.4);
+  const s=c.createBufferSource(); s.buffer=buf;
+  const f=c.createBiquadFilter(); f.type='bandpass'; f.Q.value=q||1;
+  f.frequency.setValueAtTime(f0,c.currentTime);
+  if(f1) f.frequency.exponentialRampToValueAtTime(f1,c.currentTime+dur);
+  const g=c.createGain();
+  g.gain.setValueAtTime(0.0001,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(vol,c.currentTime+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+}
+/* 챈트 음절: 오름조 */
+const OFF=[0,2,4,5,7,9,11,12,14,16];
+function sylTone(i){
+  if(muted||!ac()) return;
+  const freq=294*Math.pow(2,OFF[i]/12);
+  const accent=i>=8;
+  tone(freq,accent?0.2:0.13,'triangle',accent?0.22:0.16,0);
+  if(i===9) tone(freq*1.5,0.2,'sine',0.12,0.02);
+}
+function foot(){ if(muted||!ac()) return; tone(150+Math.random()*40,0.045,'sine',0.045,0); }
+function sfx(kind){
+  if(muted||!ac()) return;
+  switch(kind){
+    case 'ui': tone(500,0.05,'sine',0.08,0); break;
+    case 'whoosh': noise(0.5,0.3,1800,300,0.8); tone(92,0.45,'sine',0.26,0.02,58); break;
+    case 'buzzer': tone(120,0.42,'sawtooth',0.22,0,88); tone(90,0.44,'square',0.15,0.02,66); noise(0.3,0.18,300,180,1.2); break;
+    case 'relief': tone(523,0.1,'sine',0.12,0); tone(659,0.13,'sine',0.1,0.06); break;
+    case 'win': [523,659,784,1047,1319].forEach((f,i)=>tone(f,0.24,'triangle',0.2,i*0.12)); tone(1568,0.4,'triangle',0.16,0.6); break;
+  }
+}
+
+/* ================= dom refs ================= */
+const $=id=>document.getElementById(id);
+const fieldWrap=$('fieldWrap'), runnerG=$('runnerG'),
+      legA=$('legA'), legB=$('legB'), armA=$('armA'),
+      taggerG=$('taggerG'), taggerEyes=$('taggerEyes'),
+      tint=$('tint'), progFill=$('progFill'), chantEl=$('chant');
+
+/* ================= game state ================= */
+let G=null, raf=null, lastStatusKey=null, lastStatusWarn=false;
+
+function buildChant(){
+  /* 무궁화 | 꽃이 | 피었습니다 사이에 공백 */
+  chantEl.innerHTML='';
+  const gaps=new Set([3,5]);
+  SYL.forEach((s,i)=>{
+    if(gaps.has(i)){ const g=document.createElement('span'); g.className='syl gap'; g.textContent=' '; chantEl.appendChild(g); }
+    const sp=document.createElement('span');
+    sp.className='syl'+(i===9?' last':''); sp.dataset.i=i; sp.textContent=s;
+    chantEl.appendChild(sp);
+  });
+}
+function clearChant(){ chantEl.querySelectorAll('.syl').forEach(s=>s.classList.remove('lit')); }
+function litSyllable(i){ const sp=chantEl.querySelector('.syl[data-i="'+i+'"]'); if(sp) sp.classList.add('lit'); }
+
+/* ---------- rendering ---------- */
+function updateRunner(){
+  const frac = G? Math.min(1,G.pos/G.distance) : 0;
+  const x = startX + frac*(goalX-startX);
+  const moving = !!G && G.vel>0.4;
+  const ph = G? G.legPhase : 0;
+  const sw = moving? Math.sin(ph)*8 : 3;
+  const bob = moving? Math.abs(Math.sin(ph))*2.2 : 0;
+  runnerG.setAttribute('transform','translate('+x.toFixed(2)+','+(baseY-bob).toFixed(2)+')');
+  legA.setAttribute('x2', sw.toFixed(1));
+  legB.setAttribute('x2', (-sw).toFixed(1));
+  const asw = moving? Math.sin(ph+Math.PI)*6 : 4;
+  armA.setAttribute('x2', asw.toFixed(1));
+  armA.setAttribute('y2', (moving? -30 - Math.cos(ph)*3 : -30).toFixed(1));
+}
+function updateProgress(){ progFill.style.width=((G?Math.min(1,G.pos/G.distance):0)*100).toFixed(1)+'%'; }
+function renderLives(){
+  const box=$('lives'); box.innerHTML='';
+  const total=G?G.maxLives:livesSel, cur=G?G.lives:livesSel;
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');
+    d.className='life'+(i>=cur?' lost':'');
+    box.appendChild(d);
+  }
+}
+function setFieldState(s){
+  fieldWrap.classList.toggle('red',s==='red');
+  fieldWrap.classList.toggle('green',s!=='red');
+  tint.setAttribute('opacity', s==='red'?'0.14':'0');
+}
+function taggerSetFacing(watching){
+  if(!reduced()){
+    taggerG.classList.remove('turning'); void taggerG.offsetWidth; taggerG.classList.add('turning');
+    setTimeout(()=>{ taggerEyes.setAttribute('opacity', watching?'1':'0'); },130);
+    setTimeout(()=>taggerG.classList.remove('turning'),340);
+  }else{
+    taggerEyes.setAttribute('opacity', watching?'1':'0');
+  }
+}
+function refreshStatePill(){
+  const red = G && (G.phase==='red' || G.phase==='caught');
+  const p=$('statePill');
+  p.classList.toggle('red',!!red); p.classList.toggle('green',!red);
+  $('pillMain').textContent = red? t('freeze') : t('run');
+  $('pillSub').textContent  = red? t('watching') : t('lookaway');
+}
+function refreshHoldBtn(){
+  const b=$('btnHold'), red = G && (G.phase==='red'||G.phase==='caught');
+  const holding = G && G.holding;
+  b.classList.toggle('danger',!!red);
+  b.classList.toggle('holding',!!holding);
+  b.setAttribute('aria-pressed', holding?'true':'false');
+  if(red){ $('holdMain').textContent=t('holdStop'); $('holdSub').textContent=t('holdSubStop'); }
+  else if(holding){ $('holdMain').textContent=t('holdRunning'); $('holdSub').textContent=t('holdSubGo'); }
+  else { $('holdMain').textContent=t('holdRun'); $('holdSub').textContent=t('holdSub'); }
+}
+function setStatus(key,warn){ lastStatusKey=key; lastStatusWarn=!!warn;
+  const el=$('status'); el.innerHTML=t(key); el.classList.toggle('warn',!!warn); }
+function shake(){ if(reduced())return; fieldWrap.classList.remove('shake'); void fieldWrap.offsetWidth; fieldWrap.classList.add('shake'); }
+
+/* ================= holding input ================= */
+const holds=new Set();
+function updateHolding(){ if(G) G.holding = holds.size>0; refreshHoldBtn(); }
+function addHold(id){ ac(); holds.add(id); updateHolding(); }
+function removeHold(id){ holds.delete(id); updateHolding(); }
+
+function bindHold(elm,id){
+  elm.addEventListener('pointerdown',e=>{ e.preventDefault();
+    try{ elm.setPointerCapture(e.pointerId); }catch(_){}
+    addHold(id+':'+e.pointerId);
+  });
+  const up=e=>{ removeHold(id+':'+e.pointerId); };
+  elm.addEventListener('pointerup',up);
+  elm.addEventListener('pointercancel',up);
+}
+bindHold($('btnHold'),'btn');
+bindHold(fieldWrap,'field');
+/* 안전망: 창 밖에서 손 떼도 풀리도록 */
+window.addEventListener('pointerup',()=>{ /* capture가 처리하지만 혹시 몰라 정리 */ });
+window.addEventListener('blur',()=>{ holds.clear(); updateHolding(); });
+/* 키보드 접근성: 스페이스/엔터로 홀드 */
+$('btnHold').addEventListener('keydown',e=>{ if((e.key===' '||e.key==='Enter')&&!e.repeat){ e.preventDefault(); addHold('key'); } });
+$('btnHold').addEventListener('keyup',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); removeHold('key'); } });
+fieldWrap.addEventListener('keydown',e=>{ if((e.key===' '||e.key==='Enter')&&!e.repeat){ e.preventDefault(); addHold('fkey'); } });
+fieldWrap.addEventListener('keyup',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); removeHold('fkey'); } });
+
+/* ================= phase machine ================= */
+function d(){ return DIFF[difficulty]; }
+
+function startGreen(ts){
+  const D=d();
+  G.phase='green'; G.caughtFlag=false;
+  let tt=ts+380;
+  G.sylTimes=[];
+  for(let i=0;i<10;i++){
+    const jit=1+(Math.random()-0.5)*2*D.sylJit;
+    let iv=D.sylBase*jit;
+    if(D.rush && i>=7) iv*=0.78;          /* 어려움: 끝에서 몰아친다 */
+    G.sylTimes.push(tt); tt+=iv;
+  }
+  const grace=D.turnDelay[0]+Math.random()*(D.turnDelay[1]-D.turnDelay[0]);
+  G.turnTime=G.sylTimes[9]+grace;
+  G.sylIdx=0;
+  clearChant();
+  setFieldState('green'); taggerSetFacing(false);
+  refreshStatePill();
+  setStatus('sGreen',false);
+}
+function enterRed(ts){
+  const D=d();
+  G.phase='red';
+  setFieldState('red'); taggerSetFacing(true);
+  sfx('whoosh'); vib(28);
+  G.redUntil=ts+(D.look[0]+Math.random()*(D.look[1]-D.look[0]));
+  refreshStatePill();
+  setStatus('sRed',true);
+}
+function doCaught(){
+  G.caughtFlag=true;
+  G.vel=0; holds.clear(); updateHolding();
+  G.lives--;
+  sfx('buzzer'); vib([90,60,90]); shake();
+  renderLives();
+  if(G.lives<=0){
+    G.phase='over';
+    setTimeout(()=>showResult(false),750);
+  }else{
+    G.phase='caught';
+    G.pos=Math.max(0,G.pos-G.distance*0.16);
+    updateProgress();
+    setStatus('sCaught',true);
+    refreshStatePill(); refreshHoldBtn();
+    setTimeout(()=>{ if(G&&G.phase==='caught') startGreen(performance.now()); },1150);
+  }
+}
+function win(){
+  G.phase='over'; G.vel=0; G.pos=G.distance; updateProgress(); updateRunner();
+  sfx('win'); vib([60,40,60,40,140]);
+  setTimeout(()=>showResult(true),550);
+}
+
+/* ================= main loop ================= */
+function step(dt,ts){
+  const D=d();
+  const active=(G.phase==='green'||G.phase==='red');
+  /* physics */
+  if(active){
+    if(G.holding){ G.vel+=D.accel*dt; if(G.vel>D.maxSpeed) G.vel=D.maxSpeed; }
+    else { G.vel-=D.decel*dt; if(G.vel<0) G.vel=0; }
+    if(G.vel>0){
+      G.pos+=G.vel*dt;
+      G.legPhase+=G.vel*dt*0.55;
+      const mark=Math.floor(G.legPhase/Math.PI);
+      if(mark!==G.stepMark && G.vel>5){ G.stepMark=mark; foot(); }
+      if(G.pos>=G.distance){ win(); return; }
+    }
+  }
+  /* phase logic */
+  if(G.phase==='green'){
+    while(G.sylIdx<10 && ts>=G.sylTimes[G.sylIdx]){ sylTone(G.sylIdx); litSyllable(G.sylIdx); G.sylIdx++; }
+    if(ts>=G.turnTime) enterRed(ts);
+  }else if(G.phase==='red'){
+    if(!G.caughtFlag && (G.holding || G.vel>D.catchVel)){ doCaught(); }
+    else if(ts>=G.redUntil){ sfx('relief'); startGreen(ts); }
+  }
+  updateRunner(); updateProgress();
+}
+function loop(ts){
+  if(!G || G.phase==='over'){ raf=null; return; }
+  if(!G.lastLoop) G.lastLoop=ts;
+  const dt=Math.min(0.05,(ts-G.lastLoop)/1000);
+  G.lastLoop=ts;
+  step(dt,ts);
+  if(G && G.phase!=='over') raf=requestAnimationFrame(loop);
+  else raf=null;
+}
+
+/* ================= new game ================= */
+function newGame(){
+  G={
+    phase:'ready', pos:0, vel:0, legPhase:0, stepMark:0,
+    distance:DIST[distSel], lives:livesSel, maxLives:livesSel,
+    holding:false, caughtFlag:false, lastLoop:0,
+    sylTimes:[], sylIdx:0, turnTime:0, redUntil:0,
+  };
+  holds.clear();
+  renderLives(); updateProgress(); updateRunner();
+  setFieldState('green'); taggerEyes.setAttribute('opacity','0');
+  refreshStatePill(); refreshHoldBtn();
+  setStatus('sReady',false);
+  const t0=performance.now();
+  setTimeout(()=>{ if(G && G.phase==='ready') startGreen(performance.now()); }, 650);
+  if(!raf) raf=requestAnimationFrame(loop);
+}
+
+/* ================= modals & language ================= */
+function buildStartModal(){
+  $('startBox').innerHTML=
+    '<h2>'+t('startH')+'</h2>'+
+    '<div class="sub">'+t('startSub')+'</div>'+
+    '<ul class="howto">'+t('startSteps')+'</ul>'+
+    '<div class="set-label">'+t('diffLabel')+'</div>'+
+    '<div class="diff-row">'+['easy','normal','hard'].map((k,i)=>
+       '<button class="diff'+(difficulty===k?' sel':'')+'" data-d="'+k+'">'+t('diffNames')[i]+'</button>').join('')+
+    '</div>'+
+    '<div class="diff-name" id="diffName"></div>'+
+    '<div class="set-label">'+t('livesLabel')+'</div>'+
+    '<div class="opt-row">'+
+      '<button class="opt lf'+(livesSel===1?' sel':'')+'" data-lv="1">'+t('life1')+'</button>'+
+      '<button class="opt lf'+(livesSel===3?' sel':'')+'" data-lv="3">'+t('life3')+'</button>'+
+      '<button class="opt lf'+(livesSel===5?' sel':'')+'" data-lv="5">'+t('life5')+'</button>'+
+    '</div>'+
+    '<div class="set-label">'+t('distLabel')+'</div>'+
+    '<div class="opt-row">'+[0,1,2].map(i=>
+      '<button class="opt ds'+(distSel===i?' sel':'')+'" data-ds="'+i+'">'+t('distNames')[i]+'</button>').join('')+
+    '</div>'+
+    '<button class="go" id="btnStart">'+t('startBtn')+'</button>'+
+    '<div class="footer-note">'+t('startFoot')+'</div>';
+  const diffName=$('diffName');
+  const setDiffName=()=>{ diffName.textContent=t('diffDesc')[['easy','normal','hard'].indexOf(difficulty)]; };
+  setDiffName();
+  $('startBox').querySelectorAll('.diff').forEach(b=>b.addEventListener('click',()=>{
+    $('startBox').querySelectorAll('.diff').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); difficulty=b.dataset.d; setDiffName(); sfx('ui');
+  }));
+  $('startBox').querySelectorAll('.lf').forEach(b=>b.addEventListener('click',()=>{
+    $('startBox').querySelectorAll('.lf').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); livesSel=+b.dataset.lv; sfx('ui');
+  }));
+  $('startBox').querySelectorAll('.ds').forEach(b=>b.addEventListener('click',()=>{
+    $('startBox').querySelectorAll('.ds').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); distSel=+b.dataset.ds; sfx('ui');
+  }));
+  $('btnStart').addEventListener('click',()=>{
+    sfx('ui'); $('startModal').classList.add('hidden'); newGame();
+  });
+}
+function buildHelpModal(){
+  $('helpBox').innerHTML=
+    '<h2>'+t('helpH')+'</h2>'+
+    '<div class="sub">'+t('helpSub')+'</div>'+
+    '<ul class="howto">'+t('helpSteps')+'</ul>'+
+    '<button class="go" id="btnCloseHelp">'+t('helpClose')+'</button>';
+  $('btnCloseHelp').addEventListener('click',()=>$('helpModal').classList.add('hidden'));
+}
+function showResult(won){
+  $('endEmoji').textContent = won? t('winEmoji') : t('loseEmoji');
+  $('endTitle').textContent = won? t('winTitle') : t('loseTitle');
+  $('endSub').textContent   = won? t('winSub')   : t('loseSub');
+  $('endModal').dataset.won = won?'1':'0';
+  $('endModal').classList.remove('hidden');
+}
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.title = lang==='ko'
+    ? '무궁화 꽃이 피었습니다 · Red Light, Green Light'
+    : 'Red Light, Green Light · 무궁화 꽃이 피었습니다';
+  $('hTitle').textContent=t('title');
+  $('hSub').textContent=t('sub');
+  $('btnLang').textContent = lang==='ko'?'EN':'한국어';
+  $('btnBack').href='../../index.html?lang='+lang;
+  $('capStart').textContent=t('capStart');
+  $('capGoal').textContent=t('capGoal');
+  $('gloss').textContent=t('glossChant');
+  refreshStatePill(); refreshHoldBtn();
+  buildStartModal(); buildHelpModal();
+  if(lastStatusKey) setStatus(lastStatusKey,lastStatusWarn);
+  /* 결과창이 떠 있으면 언어에 맞게 갱신 */
+  const em=$('endModal');
+  if(!em.classList.contains('hidden')){
+    const won=em.dataset.won==='1';
+    $('endEmoji').textContent = won? t('winEmoji') : t('loseEmoji');
+    $('endTitle').textContent = won? t('winTitle') : t('loseTitle');
+    $('endSub').textContent   = won? t('winSub')   : t('loseSub');
+  }
+  $('btnAgain').textContent=t('again');
+}
+
+/* ================= header buttons ================= */
+$('btnLang').addEventListener('click',()=>{ lang=(lang==='ko')?'en':'ko'; sfx('ui'); applyLang(); });
+$('btnHelp').addEventListener('click',()=>{ sfx('ui'); $('helpModal').classList.remove('hidden'); });
+$('btnSound').addEventListener('click',e=>{ muted=!muted; e.currentTarget.textContent=muted?'🔇':'🔊'; if(!muted){ ac(); sfx('ui'); } });
+$('btnAgain').addEventListener('click',()=>{
+  sfx('ui'); $('endModal').classList.add('hidden');
+  buildStartModal(); $('startModal').classList.remove('hidden');
+});
+/* 첫 제스처에 오디오 컨텍스트 준비 */
+window.addEventListener('pointerdown',()=>ac(),{once:true});
+
+/* ================= boot ================= */
+buildChant();
+applyLang();
+/* 초기 화면 즉시 렌더 (필드/러너/술래 표시, 설정창 위에) */
+updateRunner(); updateProgress(); renderLives();
+</script>
+</body>
+</html>

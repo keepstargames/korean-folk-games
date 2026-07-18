@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>달고나 · Dalgona — 설탕 뽑기 카빙 게임</title>
+<meta name="description" content="선을 따라 달고나를 조심조심 파내세요. 동그라미·세모·별·우산 모양, 쉬움부터 어려움까지. Trace-carve the honeycomb sugar candy — circle, triangle, star or umbrella, playable right in your browser.">
+<meta property="og:title" content="달고나 · Dalgona — Sugar Candy Carving">
+<meta property="og:description" content="선을 따라 모양을 파내는 달고나 뽑기 게임. Trace the line and carve the shape without cracking the candy.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#181410">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b8382a'/%3E%3Ctext x='32' y='45' font-size='34' text-anchor='middle' fill='%23f2e8d5' font-family='serif'%3E달%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#26201b;
+  --ink-deep:#181410;
+  --hanji:#f2e8d5;
+  --hanji-dim:#e6d9bf;
+  --cheong:#2c4f8f;
+  --cheong-lite:#4a6fb0;
+  --hong:#b8382a;
+  --hong-lite:#d3564a;
+  --seal:#c9972f;
+  --line:#3a322a;
+  --serif:'Song Myung','Nanum Myeongjo','Noto Serif KR','Apple SD Gothic Neo','Malgun Gothic',serif;
+  --sans:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','맑은 고딕',system-ui,sans-serif;
+  /* single caramel/amber accent for the candy (harmonious with --seal) */
+  --caramel:#d98a2b;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  background:var(--ink-deep);
+  background-image:radial-gradient(ellipse at 50% -20%, #2a231c 0%, #181410 65%);
+  color:var(--hanji);
+  font-family:var(--sans);
+  word-break:keep-all;overflow-wrap:break-word;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100dvh;
+  padding:12px 12px 22px;
+}
+
+/* ---------- header ---------- */
+header{
+  width:100%;max-width:560px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 2px 12px;gap:8px;
+}
+.title{display:flex;align-items:center;gap:11px;min-width:0}
+.seal{
+  width:44px;height:44px;border-radius:8px;flex:none;
+  background:linear-gradient(135deg,#c03a2b,#8f2417);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:22px;color:#f7ecd8;
+  box-shadow:inset 0 0 0 2px rgba(247,236,216,.35), 0 2px 8px rgba(0,0,0,.5);
+  transform:rotate(-3deg);
+}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(20px,5vw,27px);letter-spacing:4px;line-height:1}
+h1 small{display:block;font-family:var(--sans);font-size:10px;letter-spacing:2px;color:#9a8e79;margin-top:3px}
+.hdr-right{display:flex;align-items:center;gap:7px;flex:none}
+.hbtn{
+  width:44px;height:44px;border-radius:12px;flex:none;
+  background:transparent;border:1.5px solid rgba(242,232,213,.4);
+  color:var(--hanji);font-family:var(--sans);font-size:17px;letter-spacing:1px;
+  display:flex;align-items:center;justify-content:center;text-decoration:none;
+  cursor:pointer;transition:border-color .2s,color .2s,transform .08s;
+}
+.hbtn.lang{font-size:13px}
+.hbtn:hover{border-color:var(--seal);color:var(--seal)}
+.hbtn:active{transform:translateY(1px)}
+.hbtn:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+
+/* ---------- main ---------- */
+main{width:100%;max-width:560px;display:flex;flex-direction:column;gap:12px}
+
+.round-label{
+  text-align:center;font-family:var(--serif);font-size:15px;letter-spacing:3px;
+  color:#cdbf9f;min-height:20px;
+}
+.round-label b{color:var(--seal)}
+
+/* HUD */
+.hud{display:flex;gap:8px}
+.stat{
+  background:rgba(242,232,213,.06);border:1px solid rgba(242,232,213,.14);
+  border-radius:10px;padding:8px 10px;flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;
+}
+.stat.wide{flex:1.5}
+.stat-k{font-size:10px;letter-spacing:2px;color:#9a8e79}
+.stat-v{font-size:20px;font-variant-numeric:tabular-nums;color:#efe4cd;font-family:var(--serif)}
+.meter{height:16px;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.35);
+  border:1px solid rgba(242,232,213,.18);margin-top:3px}
+.meter>div{height:100%;width:0%;border-radius:8px 0 0 8px;
+  background:linear-gradient(90deg,var(--seal),var(--hong));transition:width .12s linear}
+.meter.danger{box-shadow:0 0 12px rgba(184,56,42,.55)}
+
+/* stage */
+.stage-wrap{
+  position:relative;border-radius:14px;padding:8px;
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(70,58,44,.5) 0%, rgba(24,20,16,0) 60%),
+    linear-gradient(180deg,#221c16,#15110d);
+  box-shadow:0 12px 34px rgba(0,0,0,.6), inset 0 0 0 1px rgba(58,50,42,.5);
+}
+.stage-wrap.shake{animation:shake .22s ease}
+@keyframes shake{
+  0%,100%{transform:translate(0,0)}
+  20%{transform:translate(-5px,2px)}
+  40%{transform:translate(4px,-3px)}
+  60%{transform:translate(-3px,-2px)}
+  80%{transform:translate(3px,2px)}
+}
+svg#stage{display:block;width:100%;height:auto;touch-action:none;border-radius:8px}
+
+.pulse{animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.95}50%{opacity:.35}}
+.frontpulse{animation:frontpulse 1s ease-in-out infinite}
+@keyframes frontpulse{0%,100%{r:6;opacity:1}50%{r:9;opacity:.55}}
+
+.hint{
+  text-align:center;font-size:13.5px;line-height:1.6;color:#b3a78e;min-height:40px;
+  display:flex;align-items:center;justify-content:center;padding:0 6px;
+}
+.hint b{color:var(--seal)}
+
+.controls{display:flex;gap:10px;justify-content:center}
+.ctl{
+  background:transparent;color:var(--hanji);
+  border:1px solid rgba(242,232,213,.35);border-radius:8px;
+  padding:11px 20px;font-family:var(--sans);font-size:14px;letter-spacing:2px;
+  min-height:44px;cursor:pointer;transition:border-color .2s,color .2s,transform .08s;
+}
+.ctl:hover{border-color:var(--seal);color:var(--seal)}
+.ctl:active{transform:translateY(1px)}
+.ctl:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+
+/* ---------- modals ---------- */
+.modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(16,12,9,.9);z-index:60;padding:18px;
+}
+.modal.hidden{display:none}
+.modal-box{
+  background:var(--hanji);color:var(--ink);
+  border-radius:14px;padding:26px 22px;max-width:440px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);
+  max-height:94dvh;overflow-y:auto;
+}
+.modal-box h2{font-family:var(--serif);font-weight:400;font-size:30px;letter-spacing:5px;margin-bottom:4px}
+.modal-box .sub{font-size:13px;color:#6d5f4a;letter-spacing:1px;margin-bottom:18px}
+.howto{list-style:none;text-align:left;margin-bottom:18px}
+.howto li{display:flex;gap:11px;margin-bottom:11px;font-size:14px;line-height:1.6;color:#443a2c}
+.howto .num{
+  flex:none;width:25px;height:25px;border-radius:50%;
+  background:var(--ink);color:var(--hanji);
+  display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:2px;
+}
+.howto b{color:var(--hong)}
+.howto .gold{color:#8a6a1c;font-weight:bold}
+.set-label{font-size:12px;letter-spacing:2px;color:#6d5f4a;margin:2px 0 10px}
+.opt-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.opt{
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  border-radius:9px;padding:11px 15px;font-family:var(--sans);font-size:14px;
+  min-height:44px;cursor:pointer;transition:background .15s,color .15s;
+}
+.opt.sel{background:var(--ink);color:var(--hanji)}
+.opt:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.diff-row{display:flex;gap:8px;justify-content:center;margin-bottom:6px}
+.diff{
+  flex:1;padding:12px 0;border-radius:9px;font-family:var(--sans);font-size:15px;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  min-height:44px;cursor:pointer;transition:background .15s,color .15s;
+}
+.diff.sel{background:var(--hong);border-color:var(--hong);color:var(--hanji);font-weight:bold}
+.diff:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.diff-name{font-size:13px;color:#8a6a1c;margin-bottom:16px;min-height:18px}
+.go{
+  width:100%;background:var(--ink);color:var(--hanji);
+  font-family:var(--sans);font-size:17px;letter-spacing:3px;padding:15px;
+  border:none;border-radius:9px;min-height:48px;cursor:pointer;transition:transform .08s;
+}
+.go:active{transform:translateY(1px)}
+.go:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.go.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink);margin-top:10px;font-size:15px}
+.stars{font-size:40px;letter-spacing:8px;margin:6px 0 4px;color:#c9972f}
+.stars .off{color:rgba(38,32,27,.22)}
+.res-line{font-size:14px;color:#5c5040;line-height:1.8;margin-bottom:16px}
+.res-line b{color:var(--hong)}
+.footer-note{margin-top:12px;font-size:12px;color:#7d715c;letter-spacing:1px}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <div class="seal">달</div>
+    <h1><span id="hTitle">달고나</span><small id="hSub">SUGAR CANDY CARVING</small></h1>
+  </div>
+  <div class="hdr-right">
+    <button class="hbtn" id="btnSound" title="Sound">🔊</button>
+    <button class="hbtn lang" id="btnLang">EN</button>
+    <button class="hbtn" id="btnHelp" title="Help">?</button>
+    <a class="hbtn" id="btnBack" href="../../index.html?lang=en" title="Back">←</a>
+  </div>
+</header>
+
+<main>
+  <div class="round-label" id="roundLabel"></div>
+
+  <div class="hud">
+    <div class="stat">
+      <div class="stat-k" id="kProg">CARVED</div>
+      <div class="stat-v" id="vProg">0%</div>
+    </div>
+    <div class="stat wide">
+      <div class="stat-k" id="kCrack">CRACKS</div>
+      <div class="meter" id="crackMeter"><div id="crackFill"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-k" id="kTime">TIME</div>
+      <div class="stat-v" id="vTime">0.0</div>
+    </div>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <svg id="stage" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="gDisc" cx="42%" cy="36%" r="72%">
+          <stop offset="0%" stop-color="#f3c76f"/>
+          <stop offset="42%" stop-color="#e29a35"/>
+          <stop offset="78%" stop-color="#b26b1d"/>
+          <stop offset="100%" stop-color="#894c13"/>
+        </radialGradient>
+        <radialGradient id="gDome" cx="50%" cy="50%" r="50%">
+          <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="100%" stop-color="rgba(60,30,8,.5)"/>
+        </radialGradient>
+        <radialGradient id="gPop" cx="42%" cy="34%" r="72%">
+          <stop offset="0%" stop-color="#ffd884"/>
+          <stop offset="55%" stop-color="#eaa33e"/>
+          <stop offset="100%" stop-color="#c07c24"/>
+        </radialGradient>
+        <filter id="carveGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="1.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <g id="discLayer">
+        <circle cx="200" cy="200" r="170" fill="#0f0b08"/>
+        <circle id="disc" cx="200" cy="200" r="166" fill="url(#gDisc)"/>
+        <g id="sugarTex"></g>
+        <ellipse cx="150" cy="132" rx="58" ry="34" fill="rgba(255,244,210,.16)"/>
+        <circle cx="200" cy="200" r="166" fill="url(#gDome)"/>
+        <circle cx="200" cy="200" r="166" fill="none" stroke="rgba(60,32,10,.55)" stroke-width="6"/>
+        <circle cx="200" cy="200" r="162" fill="none" stroke="rgba(255,232,180,.18)" stroke-width="1.5"/>
+      </g>
+
+      <!-- embossed / recessed shape outline -->
+      <path id="grooveShadow" d="" fill="none" stroke="rgba(70,40,14,.55)" stroke-width="9"
+            stroke-linecap="round" stroke-linejoin="round" transform="translate(0,2.2)"/>
+      <path id="grooveCore" d="" fill="none" stroke="rgba(96,56,20,.85)" stroke-width="4.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="grooveHi" d="" fill="none" stroke="rgba(255,238,196,.5)" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" transform="translate(0,-1.6)"/>
+      <path id="ref" d="" fill="none" stroke="none" opacity="0"/>
+
+      <!-- carved reveal -->
+      <path id="carveGlowPath" d="" fill="none" stroke="rgba(255,214,120,.55)" stroke-width="8"
+            stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 100000"/>
+      <path id="carve" d="" fill="none" stroke="#fff4d8" stroke-width="3.4"
+            stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 100000" filter="url(#carveGlow)"/>
+
+      <!-- pop-out (win) -->
+      <g id="popLayer"></g>
+      <!-- shatter (lose) -->
+      <g id="shatterLayer"></g>
+
+      <g id="cracks"></g>
+
+      <g id="fx">
+        <g id="startMk" style="display:none">
+          <circle cx="0" cy="0" r="20" fill="none" stroke="#fff4d8" stroke-width="2.5" class="pulse"/>
+          <circle cx="0" cy="0" r="8" fill="#fff4d8"/>
+          <text id="startLabel" x="0" y="-30" text-anchor="middle" font-size="13" fill="#fff4d8"
+                font-family="'Gowun Dodum',sans-serif"></text>
+        </g>
+        <g id="resumeMk" style="display:none">
+          <circle cx="0" cy="0" r="18" fill="none" stroke="#ffd884" stroke-width="2.5" class="pulse"/>
+          <circle cx="0" cy="0" r="7" fill="#ffd884"/>
+          <text id="resumeLabel" x="0" y="-27" text-anchor="middle" font-size="12" fill="#ffd884"
+                font-family="'Gowun Dodum',sans-serif"></text>
+        </g>
+        <circle id="frontDot" cx="0" cy="0" r="6" fill="#fff4d8" style="display:none" class="frontpulse"/>
+        <g id="needle" style="display:none">
+          <line x1="0" y1="0" x2="15" y2="-24" stroke="#e9dcc0" stroke-width="2.6" stroke-linecap="round"/>
+          <line x1="0" y1="0" x2="15" y2="-24" stroke="#7a6a4c" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="15" cy="-24" r="4.5" fill="#c9972f" stroke="#1d160c" stroke-width="1"/>
+          <circle cx="0" cy="0" r="2.4" fill="#fff4d8"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="hint" id="hint"></div>
+
+  <div class="controls">
+    <button class="ctl" id="btnRestart"></button>
+    <button class="ctl" id="btnChange"></button>
+  </div>
+</main>
+
+<div class="modal" id="startModal"><div class="modal-box" id="startBox"></div></div>
+<div class="modal hidden" id="helpModal"><div class="modal-box" id="helpBox"></div></div>
+<div class="modal hidden" id="endModal"><div class="modal-box" id="endBox"></div></div>
+
+<script>
+"use strict";
+
+/* ================= i18n ================= */
+const SHAPE_KEYS=['circle','triangle','star','umbrella'];
+const L={
+ko:{
+  title:'달고나', sub:'설탕 뽑기 · 조심조심',
+  kProg:'파낸 정도', kCrack:'금(균열)', kTime:'남은 시간',
+  restart:'다시', change:'설정',
+  startMark:'여기서 시작', resumeMark:'여기 이어서', resumeGap:'손잡이 이어서',
+  shapeNames:{circle:'동그라미',triangle:'세모',star:'별',umbrella:'우산',random:'랜덤'},
+  diffNames:{easy:'쉬움',normal:'보통',hard:'어려움'},
+  roundLabel:(s,d)=>'<b>'+s+'</b> · '+d,
+  hintStart:'시작 지점 <b>●</b>을 누른 채 선을 따라 천천히 드래그하세요',
+  hintStartFar:'반짝이는 <b>시작 지점</b>부터 눌러 주세요',
+  hintTrace:'선을 벗어나지 마세요 — 천천히!',
+  hintResume:'<b>현재 지점</b>을 다시 눌러 이어서 파세요',
+  hintGap:'손을 떼고 <b>손잡이 위쪽</b>부터 이어서 파세요',
+  // setup
+  setupH:'달고나', setupSub:'선을 따라 모양을 파내세요',
+  setupSteps:'<li><span class="num">1</span><span>시작 지점 <span class="gold">●</span>을 누른 채, 새겨진 <b>선을 따라</b> 바늘을 천천히 끌고 가세요.</span></li>'+
+    '<li><span class="num">2</span><span>선을 벗어나면 <b>금(균열)</b>이 번져요. 금 막대가 다 차기 <b>전에</b> 모양을 끝까지 파내면 성공!</span></li>'+
+    '<li><span class="num">3</span><span>손을 떼도 괜찮아요. <span class="gold">현재 지점</span>을 다시 누르면 이어서 팔 수 있어요.</span></li>',
+  shapeLabel:'모양', diffLabel:'난이도',
+  diffDesc:{easy:'넉넉한 여유 · 70초',normal:'적당한 긴장 · 50초',hard:'아슬아슬 · 36초'},
+  startBtn:'시작', startFoot:'모바일에서도 손가락으로 바로!',
+  helpH:'노는 법', helpSub:'누른 채 선을 따라 → 끝까지 파내기',
+  helpSteps:'<li><span class="num">1</span><span><b>시작</b> — 반짝이는 <span class="gold">시작 지점 ●</span>을 누른 채로 두세요. 손을 떼면 잠깐 멈춰요.</span></li>'+
+    '<li><span class="num">2</span><span><b>따라 그리기</b> — 바늘을 <b>선을 따라</b> 천천히 끌어요. 앞으로 나아갈 때만 파여요. 살짝 흔들려도 괜찮아요.</span></li>'+
+    '<li><span class="num">3</span><span><b>금 조심</b> — 선을 크게 벗어나면 <b>금</b>이 번지고 화면이 흔들려요. 금 막대가 다 차면 <b>깨져서 실패</b>!</span></li>'+
+    '<li><span class="num">4</span><span><b>우산</b> — 지붕을 다 판 뒤 손을 떼고, <span class="gold">손잡이 위쪽</span>을 눌러 손잡이·고리를 이어서 파세요.</span></li>'+
+    '<li><span class="num">5</span><span><b>성공</b> — 시간이 다 되기 전, 금이 다 차기 전에 모양을 <b>끝까지</b> 파내면 뽑기 성공! 남은 시간과 금으로 <b>별점</b>을 받아요.</span></li>',
+  helpClose:'알겠어요',
+  // result
+  winTitle:'뽑기 성공!', winSub:'모양이 깔끔하게 떨어졌어요',
+  shatterTitle:'깨졌어요…', shatterSub:'금이 너무 번졌어요. 다시 도전!',
+  timeTitle:'시간 초과', timeSub:'설탕이 굳기 전에 끝내야 해요. 다시!',
+  starWord:s=>'별 '+s+'개',
+  resShape:(s)=>'모양 <b>'+s+'</b>',
+  resStats:(p,cr,tl)=>'파낸 정도 '+p+'% · 금 '+cr+'% · 남은 시간 '+tl+'초',
+  again:'다시 하기', changeBtn:'모양·난이도 바꾸기',
+},
+en:{
+  title:'Dalgona', sub:'CARVE THE SUGAR CANDY',
+  kProg:'CARVED', kCrack:'CRACKS', kTime:'TIME',
+  restart:'Redo', change:'Setup',
+  startMark:'START HERE', resumeMark:'RESUME', resumeGap:'HANDLE',
+  shapeNames:{circle:'Circle',triangle:'Triangle',star:'Star',umbrella:'Umbrella',random:'Random'},
+  diffNames:{easy:'Easy',normal:'Normal',hard:'Hard'},
+  roundLabel:(s,d)=>'<b>'+s+'</b> · '+d,
+  hintStart:'Press the start dot <b>●</b> and drag slowly along the line',
+  hintStartFar:'Start from the glowing <b>start dot</b>',
+  hintTrace:'Stay on the line — slow and steady!',
+  hintResume:'Press the <b>front dot</b> again to keep carving',
+  hintGap:'Lift, then continue from the <b>handle top</b>',
+  // setup
+  setupH:'Dalgona', setupSub:'Carve the shape along the line',
+  setupSteps:'<li><span class="num">1</span><span>Press the start dot <span class="gold">●</span> and drag the needle <b>along the carved line</b>, slowly.</span></li>'+
+    '<li><span class="num">2</span><span>Stray off the line and <b>cracks</b> spread. Finish the whole shape <b>before</b> the crack bar fills to win!</span></li>'+
+    '<li><span class="num">3</span><span>Lifting your finger is fine — press the <span class="gold">front dot</span> to carry on.</span></li>',
+  shapeLabel:'SHAPE', diffLabel:'DIFFICULTY',
+  diffDesc:{easy:'Wide margin · 70s',normal:'Balanced · 50s',hard:'Razor-thin · 36s'},
+  startBtn:'Start', startFoot:'Plays great with a finger on mobile!',
+  helpH:'How to play', helpSub:'Hold and trace the line → carve it all',
+  helpSteps:'<li><span class="num">1</span><span><b>Start</b> — press and hold on the glowing <span class="gold">start dot ●</span>. Lifting just pauses you.</span></li>'+
+    '<li><span class="num">2</span><span><b>Trace</b> — drag the needle <b>along the line</b>, slowly. It only carves as you move forward. Small wobble is forgiven.</span></li>'+
+    '<li><span class="num">3</span><span><b>Mind the cracks</b> — stray far off and <b>cracks</b> spread with a screen shake. Fill the crack bar and the candy <b>shatters</b>!</span></li>'+
+    '<li><span class="num">4</span><span><b>Umbrella</b> — after the canopy, lift and press the <span class="gold">handle top</span> to carve the handle and hook.</span></li>'+
+    '<li><span class="num">5</span><span><b>Win</b> — carve the <b>whole</b> shape before time runs out and before it shatters. Remaining time and cracks set your <b>star rating</b>.</span></li>',
+  helpClose:'Got it',
+  // result
+  winTitle:'Perfect Carve!', winSub:'The shape popped out clean',
+  shatterTitle:'It shattered…', shatterSub:'Too many cracks. Try again!',
+  timeTitle:'Time up', timeSub:'Finish before the sugar sets. Again!',
+  starWord:s=>s+(s===1?' star':' stars'),
+  resShape:(s)=>'Shape <b>'+s+'</b>',
+  resStats:(p,cr,tl)=>'Carved '+p+'% · Cracks '+cr+'% · Time left '+tl+'s',
+  again:'Play again', changeBtn:'Change shape / difficulty',
+}};
+
+/* ?lang= if valid, else English (same rule as hub & yutnori — don't diverge) */
+const _qp=new URLSearchParams(location.search).get('lang');
+let lang=(_qp==='en'||_qp==='ko')?_qp:'en';
+const t=(k,...a)=>{const v=L[lang][k];return typeof v==='function'?v(...a):v;};
+
+/* ================= shapes ================= */
+/* All centred on the 400x400 disc (centre 200,200). One continuous path where
+   possible; the umbrella has a separate handle sub-path (handled as a "gap"). */
+const SHAPES={
+  circle:  {d:'M 200 82 A 118 118 0 1 0 200 318 A 118 118 0 1 0 200 82 Z'},
+  triangle:{d:'M 200 84 L 304 264 L 96 264 Z'},
+  star:    {d:'M 200 78 L 229.4 159.6 L 316 162.3 L 247.6 215.5 L 271.7 298.7 L 200 250 L 128.3 298.7 L 152.4 215.5 L 84 162.3 L 170.6 159.6 Z'},
+  umbrella:{d:'M 118 172 A 82 82 0 0 1 282 172 Q 261.5 189 241 172 Q 220.5 189 200 172 Q 179.5 189 159 172 Q 138.5 189 118 172 '+
+              'M 200 172 L 200 288 Q 200 312 222 312 Q 242 312 242 292'},
+};
+
+/* difficulty tuning */
+const DIFF={
+  easy:  {tol:30, crack:0.85, heal:0.55, time:70},
+  normal:{tol:20, crack:1.6,  heal:0.22, time:50},
+  hard:  {tol:13, crack:2.7,  heal:0,    time:36},
+};
+
+/* ================= sound (WebAudio, zero assets) ================= */
+let audioCtx=null, muted=false;
+const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const vib=p=>{
+  if(muted||reduce()) return;
+  try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){}
+};
+function ac(){
+  if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq,dur,type,vol,when,slide){
+  const c=ac(); if(!c) return;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,c.currentTime+when);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide,c.currentTime+when+dur);
+  g.gain.setValueAtTime(0.0001,c.currentTime+when);
+  g.gain.exponentialRampToValueAtTime(vol,c.currentTime+when+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+when+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+when); o.stop(c.currentTime+when+dur+0.05);
+}
+function noiseBurst(when,dur,freq,q,vol,decay){
+  const c=ac(); if(!c) return;
+  const len=Math.max(1,Math.floor(c.sampleRate*dur)), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  const dk=decay||2.5;
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,dk);
+  const s=c.createBufferSource(); s.buffer=buf;
+  const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; f.Q.value=q;
+  const g=c.createGain(); g.gain.value=vol;
+  s.connect(f); f.connect(g); g.connect(c.destination);
+  s.start(c.currentTime+when);
+}
+function sfx(kind){
+  if(muted||!ac()) return;
+  switch(kind){
+    case 'scrape': noiseBurst(0,0.045,780+Math.random()*520,2.2,0.05,3.2); break;
+    case 'begin':  tone(520,0.09,'sine',0.12,0); break;
+    case 'crack':  noiseBurst(0,0.09,320,1,0.34,1.6); tone(190,0.12,'sawtooth',0.16,0,90); break;
+    case 'shatter':
+      for(let i=0;i<6;i++) noiseBurst(0.03*i,0.12,260-i*20,0.9,0.3,1.4);
+      [330,247,196,147].forEach((f,i)=>tone(f,0.3,'sawtooth',0.16,i*0.09,f*0.6));
+      break;
+    case 'win': [523,659,784,1047].forEach((f,i)=>tone(f,0.24,'triangle',0.2,i*0.12)); break;
+    case 'ui': tone(500,0.05,'sine',0.08,0); break;
+  }
+}
+function starChime(n){
+  if(muted||!ac()) return;
+  const notes=[784,988,1319];
+  for(let i=0;i<n;i++) tone(notes[i]||1319,0.26,'triangle',0.18,0.6+i*0.16);
+}
+
+/* ================= state ================= */
+const stage=document.getElementById('stage');
+let state='setup';                 // setup | play | result
+let chosenShape='random', chosenDiff='normal';
+let currentShape='circle', diff=DIFF.normal;
+let samples=[], gaps=[], Nsamp=0, totalLen=0;
+let prog=0, integrity=0, tracing=false, timerRunning=false, timeLeft=0, stars=0;
+let raf=0, lastT=0;
+let lastScrape=0, lastCrackFx=0, crackCount=0;
+let lastHintKey='start';
+let lastResult=null;
+
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const clamp=(v,lo,hi)=>v<lo?lo:(v>hi?hi:v);
+const LOOK=70;                     // max look-ahead in path px
+let lookSamp=20, backSamp=5, STEP=3;
+
+/* ================= build a round ================= */
+function pickShape(){
+  if(chosenShape==='random') return SHAPE_KEYS[(Math.random()*SHAPE_KEYS.length)|0];
+  return chosenShape;
+}
+function drawSugar(){
+  const g=document.getElementById('sugarTex');
+  let s='';
+  for(let i=0;i<150;i++){
+    const a=Math.random()*Math.PI*2, r=Math.sqrt(Math.random())*158;
+    const x=(200+Math.cos(a)*r).toFixed(1), y=(200+Math.sin(a)*r).toFixed(1);
+    const rr=(0.5+Math.random()*1.8).toFixed(1);
+    const light=Math.random()<0.5;
+    const col=light?'rgba(255,238,196,':'rgba(120,66,20,';
+    const op=(0.08+Math.random()*0.22).toFixed(2);
+    s+='<circle cx="'+x+'" cy="'+y+'" r="'+rr+'" fill="'+col+op+')"/>';
+  }
+  for(let i=0;i<12;i++){
+    const a=Math.random()*Math.PI*2, r=Math.sqrt(Math.random())*150;
+    const x=(200+Math.cos(a)*r).toFixed(1), y=(200+Math.sin(a)*r).toFixed(1);
+    const rr=(2.5+Math.random()*4).toFixed(1);
+    s+='<circle cx="'+x+'" cy="'+y+'" r="'+rr+'" fill="none" stroke="rgba(90,48,14,.18)" stroke-width="1"/>';
+  }
+  g.innerHTML=s;
+}
+function setShapePaths(key){
+  const d=SHAPES[key].d;
+  ['grooveShadow','grooveCore','grooveHi','ref','carveGlowPath','carve'].forEach(id=>{
+    document.getElementById(id).setAttribute('d',d);
+  });
+  document.getElementById('carve').style.strokeDasharray='0 100000';
+  document.getElementById('carveGlowPath').style.strokeDasharray='0 100000';
+}
+function buildSamples(){
+  const path=document.getElementById('ref');
+  totalLen=path.getTotalLength();
+  STEP=3;
+  Nsamp=Math.max(24,Math.round(totalLen/STEP));
+  lookSamp=Math.max(6,Math.round(LOOK/(totalLen/Nsamp)));
+  backSamp=Math.max(3,Math.round(14/(totalLen/Nsamp)));
+  samples=[]; gaps=[];
+  let prev=null;
+  const jumpThresh=(totalLen/Nsamp)*4+6;
+  for(let i=0;i<=Nsamp;i++){
+    const l=i/Nsamp*totalLen;
+    const p=path.getPointAtLength(l);
+    const s={x:p.x,y:p.y,l:l,gap:false};
+    if(prev){ if(dist(p,prev)>jumpThresh){ s.gap=true; gaps.push(i); } }
+    samples.push(s); prev=p;
+  }
+}
+function newRound(){
+  state='play';
+  currentShape=pickShape();
+  diff=DIFF[chosenDiff];
+  prog=0; integrity=0; tracing=false; timerRunning=false;
+  timeLeft=diff.time; stars=0; crackCount=0;
+  drawSugar();
+  setShapePaths(currentShape);
+  buildSamples();
+  document.getElementById('cracks').innerHTML='';
+  document.getElementById('popLayer').innerHTML='';
+  document.getElementById('shatterLayer').innerHTML='';
+  document.getElementById('discLayer').style.opacity='1';
+  document.querySelectorAll('#grooveShadow,#grooveCore,#grooveHi,#carve,#carveGlowPath')
+    .forEach(e=>e.style.opacity='1');
+  setRoundLabel();
+  setHint('start');
+  updateFx();
+  updateHUD();
+  cancelAnimationFrame(raf); lastT=performance.now(); raf=requestAnimationFrame(loop);
+}
+
+/* ================= HUD / labels ================= */
+function setRoundLabel(){
+  const s=t('shapeNames')[currentShape], d=t('diffNames')[chosenDiff];
+  document.getElementById('roundLabel').innerHTML=t('roundLabel',s,d);
+}
+function updateHUD(){
+  document.getElementById('vProg').textContent=Math.round(prog/Nsamp*100)+'%';
+  const cf=document.getElementById('crackFill');
+  cf.style.width=clamp(integrity,0,100)+'%';
+  document.getElementById('crackMeter').classList.toggle('danger',integrity>=75);
+  const vt=document.getElementById('vTime');
+  vt.textContent=timeLeft.toFixed(1);
+  vt.style.color=timeLeft<8?'var(--hong-lite)':'';
+}
+function setHint(key){
+  lastHintKey=key;
+  const map={start:'hintStart',startFar:'hintStartFar',trace:'hintTrace',resume:'hintResume',gap:'hintGap'};
+  document.getElementById('hint').innerHTML=t(map[key]||'hintStart');
+}
+
+/* ================= fx markers ================= */
+function place(g,pt){ g.setAttribute('transform','translate('+pt.x+','+pt.y+')'); }
+function updateFx(){
+  const sm=document.getElementById('startMk'), rm=document.getElementById('resumeMk'),
+        fd=document.getElementById('frontDot'), nd=document.getElementById('needle');
+  sm.style.display='none'; rm.style.display='none';
+  if(state!=='play'){ nd.style.display='none'; fd.style.display='none'; return; }
+  if(tracing) return; // needle + front dot managed live during drag
+  nd.style.display='none';
+  if(prog<=0){
+    place(sm,samples[0]); sm.style.display='';
+    document.getElementById('startLabel').textContent=t('startMark');
+    fd.style.display='none';
+  } else if(prog<Nsamp){
+    const nx=samples[Math.min(prog+1,Nsamp)];
+    place(rm,nx); rm.style.display='';
+    document.getElementById('resumeLabel').textContent=nx.gap?t('resumeGap'):t('resumeMark');
+    const s=samples[prog];
+    fd.setAttribute('cx',s.x); fd.setAttribute('cy',s.y); fd.style.display='';
+  }
+}
+function showNeedle(px,py){
+  const n=document.getElementById('needle'); n.style.display='';
+  n.setAttribute('transform','translate('+px+','+py+')');
+  const s=samples[Math.min(prog,Nsamp)];
+  const fd=document.getElementById('frontDot');
+  fd.setAttribute('cx',s.x); fd.setAttribute('cy',s.y); fd.style.display='';
+}
+
+/* ================= carving reveal ================= */
+function carveReveal(){
+  const len=samples[Math.min(prog,Nsamp)].l;
+  document.getElementById('carve').style.strokeDasharray=len+' 100000';
+  document.getElementById('carveGlowPath').style.strokeDasharray=len+' 100000';
+}
+function addCrack(origin,px,py){
+  if(crackCount>28) return;
+  crackCount++;
+  const cr=document.getElementById('cracks');
+  const dx=px-origin.x, dy=py-origin.y, len=Math.min(22,Math.hypot(dx,dy)+6);
+  const ang=Math.atan2(dy,dx);
+  // jagged crack line from the nearest on-path point outward
+  let d='M '+origin.x.toFixed(1)+' '+origin.y.toFixed(1);
+  let cx=origin.x, cy=origin.y;
+  const segs=3;
+  for(let i=1;i<=segs;i++){
+    const seg=len/segs, a=ang+(Math.random()-0.5)*1.1;
+    cx+=Math.cos(a)*seg; cy+=Math.sin(a)*seg;
+    d+=' L '+cx.toFixed(1)+' '+cy.toFixed(1);
+  }
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',d);
+  p.setAttribute('fill','none');
+  p.setAttribute('stroke','rgba(60,26,8,.85)');
+  p.setAttribute('stroke-width',(1+Math.random()*0.8).toFixed(1));
+  p.setAttribute('stroke-linecap','round');
+  cr.appendChild(p);
+}
+
+/* ================= trace logic ================= */
+function goodScrape(){
+  integrity=Math.max(0,integrity-diff.heal);
+  const now=performance.now();
+  if(now-lastScrape>50){ lastScrape=now; sfx('scrape'); }
+}
+function deviate(px,py,nearJ){
+  const near=samples[clamp(nearJ,0,Nsamp)];
+  const d=dist({x:px,y:py},near);
+  const sev=clamp((d-diff.tol)/(diff.tol*1.3)+0.4,0.4,1.7);
+  integrity=Math.min(100,integrity+diff.crack*sev);
+  const now=performance.now();
+  if(now-lastCrackFx>75){
+    lastCrackFx=now;
+    addCrack(near,px,py);
+    sfx('crack'); shake(); vib(16);
+  }
+  if(integrity>=100){ lose('shatter'); }
+}
+function traceMove(px,py){
+  if(state!=='play'||!tracing) return;
+  const P={x:px,y:py};
+  // gap crossing: next expected sample is a sub-path jump (umbrella handle) — no penalty
+  if(prog<Nsamp && samples[prog+1].gap){
+    if(dist(P,samples[prog+1])<=diff.tol*1.7){
+      prog++; carveReveal();
+      const now=performance.now();
+      if(now-lastScrape>50){ lastScrape=now; sfx('scrape'); }
+    }
+    showNeedle(px,py);
+    return;
+  }
+  const from=Math.max(0,prog-backSamp);
+  const to=Math.min(Nsamp,prog+lookSamp);
+  let bestJ=prog,bestD=Infinity;
+  for(let j=from;j<=to;j++){
+    if(j>prog && samples[j].gap) break; // don't scan across a gap here
+    const d=dist(P,samples[j]);
+    if(d<bestD){ bestD=d; bestJ=j; }
+  }
+  if(bestD<=diff.tol){
+    if(bestJ>prog){ prog=bestJ; carveReveal(); goodScrape(); }
+    else integrity=Math.max(0,integrity-diff.heal*0.4);
+  } else {
+    deviate(px,py,bestJ);
+  }
+  showNeedle(px,py);
+  if(prog>=Nsamp) win();
+}
+
+/* ================= win / lose ================= */
+function shake(){
+  if(reduce()) return;
+  const w=document.getElementById('stageWrap');
+  w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
+}
+function win(){
+  if(state!=='play') return;
+  state='result'; tracing=false; timerRunning=false;
+  const timeRatio=clamp(timeLeft/diff.time,0,1);
+  const crackRatio=clamp((100-integrity)/100,0,1);
+  const score=timeRatio*0.45+crackRatio*0.55;
+  stars=score>0.72?3:(score>0.42?2:1);
+  document.getElementById('needle').style.display='none';
+  document.getElementById('frontDot').style.display='none';
+  document.getElementById('startMk').style.display='none';
+  document.getElementById('resumeMk').style.display='none';
+  sfx('win'); starChime(stars); vib([60,40,60,40,90]);
+  popOut();
+  lastResult={won:true,kind:'win',stars,prog:100,integrity:Math.round(integrity),timeLeft:timeLeft.toFixed(1),shape:currentShape};
+  setTimeout(()=>{ buildEndModal(); document.getElementById('endModal').classList.remove('hidden'); }, reduce()?150:820);
+}
+function popOut(){
+  const layer=document.getElementById('popLayer');
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',SHAPES[currentShape].d);
+  p.setAttribute('fill','url(#gPop)');
+  p.setAttribute('stroke','#fff4d8');
+  p.setAttribute('stroke-width','2.5');
+  p.setAttribute('stroke-linejoin','round');
+  layer.appendChild(p);
+  if(reduce()) return;
+  p.style.transformBox='fill-box';
+  p.style.transformOrigin='center';
+  p.style.transition='transform .6s cubic-bezier(.2,1.3,.4,1)';
+  p.style.filter='drop-shadow(0 8px 12px rgba(0,0,0,.5))';
+  requestAnimationFrame(()=>{ p.style.transform='translateY(-14px) scale(1.06)'; });
+}
+function lose(kind){
+  if(state!=='play') return;
+  state='result'; tracing=false; timerRunning=false;
+  document.getElementById('needle').style.display='none';
+  document.getElementById('frontDot').style.display='none';
+  document.getElementById('startMk').style.display='none';
+  document.getElementById('resumeMk').style.display='none';
+  sfx('shatter'); shake(); vib([40,70,130]);
+  if(kind==='shatter') shatterDisc();
+  lastResult={won:false,kind,stars:0,prog:Math.round(prog/Nsamp*100),integrity:Math.round(integrity),timeLeft:timeLeft.toFixed(1),shape:currentShape};
+  setTimeout(()=>{ buildEndModal(); document.getElementById('endModal').classList.remove('hidden'); }, reduce()?150:820);
+}
+function shatterDisc(){
+  const layer=document.getElementById('shatterLayer');
+  const cx=200,cy=200,R=170,n=8;
+  document.getElementById('discLayer').style.opacity='0.15';
+  document.querySelectorAll('#grooveShadow,#grooveCore,#grooveHi,#carve,#carveGlowPath')
+    .forEach(e=>e.style.opacity='0');
+  for(let i=0;i<n;i++){
+    const a0=i/n*Math.PI*2, a1=(i+1)/n*Math.PI*2;
+    const r0=R*(0.55+Math.random()*0.2);
+    const x1=cx+Math.cos(a0)*R, y1=cy+Math.sin(a0)*R;
+    const xm=cx+Math.cos((a0+a1)/2)*r0, ym=cy+Math.sin((a0+a1)/2)*r0;
+    const x2=cx+Math.cos(a1)*R, y2=cy+Math.sin(a1)*R;
+    const g=document.createElementNS('http://www.w3.org/2000/svg','path');
+    g.setAttribute('d','M '+cx+' '+cy+' L '+x1.toFixed(1)+' '+y1.toFixed(1)+' L '+xm.toFixed(1)+' '+ym.toFixed(1)+' L '+x2.toFixed(1)+' '+y2.toFixed(1)+' Z');
+    g.setAttribute('fill','url(#gDisc)');
+    g.setAttribute('stroke','rgba(50,26,8,.6)');
+    g.setAttribute('stroke-width','1.2');
+    layer.appendChild(g);
+    if(!reduce()){
+      g.style.transition='transform .7s ease-out, opacity .7s ease-out';
+      const dir=(a0+a1)/2, dd=40+Math.random()*60;
+      requestAnimationFrame(()=>{
+        g.style.transform='translate('+(Math.cos(dir)*dd).toFixed(1)+'px,'+(Math.sin(dir)*dd+30).toFixed(1)+'px) rotate('+((Math.random()-0.5)*60).toFixed(0)+'deg)';
+        g.style.opacity='0';
+      });
+    }
+  }
+}
+
+/* ================= loop ================= */
+function loop(now){
+  raf=requestAnimationFrame(loop);
+  if(state!=='play'){ lastT=now; return; }
+  if(timerRunning){
+    const dt=Math.min(0.1,(now-lastT)/1000); lastT=now;
+    timeLeft-=dt;
+    if(timeLeft<=0){ timeLeft=0; updateHUD(); lose('time'); return; }
+  } else lastT=now;
+  updateHUD();
+}
+
+/* ================= pointer input ================= */
+function toSvg(e){
+  const rect=stage.getBoundingClientRect();
+  return { x:(e.clientX-rect.left)/rect.width*400, y:(e.clientY-rect.top)/rect.height*400 };
+}
+stage.addEventListener('pointerdown',e=>{
+  if(state!=='play') return;
+  const p=toSvg(e);
+  const dCur=dist(p,samples[Math.min(prog,Nsamp)]);
+  const dNxt=prog<Nsamp?dist(p,samples[prog+1]):Infinity;
+  const startTol=diff.tol+14;
+  if(Math.min(dCur,dNxt)<=startTol){
+    tracing=true;
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+    if(!timerRunning){ timerRunning=true; lastT=performance.now(); }
+    ac();
+    document.getElementById('startMk').style.display='none';
+    document.getElementById('resumeMk').style.display='none';
+    showNeedle(p.x,p.y);
+    sfx('begin');
+    setHint('trace');
+    traceMove(p.x,p.y);
+  } else {
+    setHint('startFar');
+  }
+  e.preventDefault();
+},{passive:false});
+stage.addEventListener('pointermove',e=>{
+  if(state!=='play'||!tracing) return;
+  const p=toSvg(e);
+  traceMove(p.x,p.y);
+  e.preventDefault();
+},{passive:false});
+function endPointer(e){
+  if(!tracing) return;
+  tracing=false;
+  try{ stage.releasePointerCapture(e.pointerId); }catch(err){}
+  if(state==='play'){
+    if(prog>0&&prog<Nsamp) setHint(samples[Math.min(prog+1,Nsamp)].gap?'gap':'resume');
+    updateFx();
+  }
+}
+stage.addEventListener('pointerup',endPointer);
+stage.addEventListener('pointercancel',endPointer);
+stage.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ================= modals ================= */
+function buildStartModal(){
+  const sn=t('shapeNames'), dn=t('diffNames'), dd=t('diffDesc');
+  const shapeKeys=['circle','triangle','star','umbrella','random'];
+  const diffKeys=['easy','normal','hard'];
+  document.getElementById('startBox').innerHTML=
+    '<h2>'+t('setupH')+'</h2>'+
+    '<div class="sub">'+t('setupSub')+'</div>'+
+    '<ul class="howto">'+t('setupSteps')+'</ul>'+
+    '<div class="set-label">'+t('shapeLabel')+'</div>'+
+    '<div class="opt-row">'+
+      shapeKeys.map(k=>'<button class="opt shp'+(chosenShape===k?' sel':'')+'" data-s="'+k+'">'+sn[k]+'</button>').join('')+
+    '</div>'+
+    '<div class="set-label">'+t('diffLabel')+'</div>'+
+    '<div class="diff-row">'+
+      diffKeys.map(k=>'<button class="diff dff'+(chosenDiff===k?' sel':'')+'" data-d="'+k+'">'+dn[k]+'</button>').join('')+
+    '</div>'+
+    '<div class="diff-name" id="diffName">'+dd[chosenDiff]+'</div>'+
+    '<button class="go" id="btnStart">'+t('startBtn')+'</button>'+
+    '<div class="footer-note">'+t('startFoot')+'</div>';
+  document.querySelectorAll('#startBox .shp').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#startBox .shp').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); chosenShape=b.dataset.s; sfx('ui');
+  }));
+  document.querySelectorAll('#startBox .dff').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#startBox .dff').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); chosenDiff=b.dataset.d;
+    document.getElementById('diffName').textContent=t('diffDesc')[chosenDiff]; sfx('ui');
+  }));
+  document.getElementById('btnStart').addEventListener('click',()=>{
+    sfx('ui');
+    document.getElementById('startModal').classList.add('hidden');
+    newRound();
+  });
+}
+function buildHelpModal(){
+  document.getElementById('helpBox').innerHTML=
+    '<h2 style="font-size:26px;letter-spacing:3px">'+t('helpH')+'</h2>'+
+    '<div class="sub">'+t('helpSub')+'</div>'+
+    '<ul class="howto">'+t('helpSteps')+'</ul>'+
+    '<button class="go" id="btnCloseHelp">'+t('helpClose')+'</button>';
+  document.getElementById('btnCloseHelp').addEventListener('click',()=>{
+    document.getElementById('helpModal').classList.add('hidden');
+  });
+}
+function buildEndModal(){
+  if(!lastResult) return;
+  const r=lastResult, sn=t('shapeNames')[r.shape];
+  let title,sub,starsHtml='';
+  if(r.won){
+    title=t('winTitle'); sub=t('winSub');
+    starsHtml='<div class="stars">'+
+      [1,2,3].map(i=>i<=r.stars?'★':'<span class="off">☆</span>').join('')+
+      '</div><div class="sub" style="margin-bottom:14px">'+t('starWord',r.stars)+'</div>';
+  } else if(r.kind==='time'){
+    title=t('timeTitle'); sub=t('timeSub');
+  } else {
+    title=t('shatterTitle'); sub=t('shatterSub');
+  }
+  document.getElementById('endBox').innerHTML=
+    '<h2>'+title+'</h2>'+
+    '<div class="sub">'+sub+'</div>'+
+    starsHtml+
+    '<div class="res-line">'+t('resShape',sn)+'<br>'+t('resStats',r.prog,r.integrity,r.timeLeft)+'</div>'+
+    '<button class="go" id="btnAgain">'+t('again')+'</button>'+
+    '<button class="go ghost" id="btnChange2">'+t('changeBtn')+'</button>';
+  document.getElementById('btnAgain').addEventListener('click',()=>{
+    sfx('ui'); document.getElementById('endModal').classList.add('hidden'); newRound();
+  });
+  document.getElementById('btnChange2').addEventListener('click',()=>{
+    sfx('ui'); document.getElementById('endModal').classList.add('hidden');
+    buildStartModal(); document.getElementById('startModal').classList.remove('hidden');
+  });
+}
+
+/* ================= language ================= */
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.title=lang==='ko'
+    ? '달고나 · Dalgona — 설탕 뽑기 카빙 게임'
+    : 'Dalgona · 달고나 — Sugar Candy Carving Game';
+  document.getElementById('hTitle').textContent=t('title');
+  document.getElementById('hSub').textContent=t('sub');
+  document.getElementById('btnLang').textContent=lang==='ko'?'EN':'한국어';
+  document.getElementById('btnBack').setAttribute('href','../../index.html?lang='+lang);
+  document.getElementById('kProg').textContent=t('kProg');
+  document.getElementById('kCrack').textContent=t('kCrack');
+  document.getElementById('kTime').textContent=t('kTime');
+  document.getElementById('btnRestart').textContent=t('restart');
+  document.getElementById('btnChange').textContent=t('change');
+  buildStartModal();
+  buildHelpModal();
+  if(state==='play'){
+    setRoundLabel();
+    setHint(lastHintKey);
+    updateFx();
+  }
+  if(state==='result') buildEndModal();
+}
+
+/* ================= header buttons ================= */
+document.getElementById('btnLang').addEventListener('click',()=>{
+  lang=(lang==='ko')?'en':'ko'; sfx('ui'); applyLang();
+});
+document.getElementById('btnHelp').addEventListener('click',()=>{
+  sfx('ui'); document.getElementById('helpModal').classList.remove('hidden');
+});
+document.getElementById('btnSound').addEventListener('click',e=>{
+  muted=!muted;
+  e.currentTarget.textContent=muted?'🔇':'🔊';
+  if(!muted) sfx('ui');
+});
+document.getElementById('btnBack').addEventListener('click',()=>{ sfx('ui'); });
+document.getElementById('btnRestart').addEventListener('click',()=>{
+  sfx('ui');
+  document.getElementById('endModal').classList.add('hidden');
+  newRound();
+});
+document.getElementById('btnChange').addEventListener('click',()=>{
+  sfx('ui');
+  document.getElementById('endModal').classList.add('hidden');
+  buildStartModal();
+  document.getElementById('startModal').classList.remove('hidden');
+});
+
+/* close modals on backdrop tap (help & end only) */
+document.getElementById('helpModal').addEventListener('click',e=>{
+  if(e.target.id==='helpModal') document.getElementById('helpModal').classList.add('hidden');
+});
+
+/* ================= init — render immediately, never blank ================= */
+drawSugar();
+setShapePaths('circle');
+buildSamples();
+updateHUD();
+setHint('start');
+applyLang();
+document.getElementById('startModal').classList.remove('hidden');
+</script>
+</body>
+</html>

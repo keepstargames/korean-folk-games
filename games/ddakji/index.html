@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>딱지치기 · Ddakji — 종이딱지 뒤집기 게임</title>
+<meta name="description" content="타이밍 파워 미터로 상대 딱지를 뒤집어라! 혼자서 AI와 즐기는 딱지치기. Ddakji — the Korean paper-tile flipping game, vs AI. A timing power-meter duel.">
+<meta property="og:title" content="딱지치기 · Ddakji — 종이딱지 뒤집기">
+<meta property="og:description" content="타이밍 맞춰 내리쳐 상대 딱지를 뒤집는 딱지치기. Time your slam and flip the tiles.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#181410">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b8382a'/%3E%3Ctext x='32' y='45' font-size='32' text-anchor='middle' fill='%23f2e8d5' font-family='serif'%3E딱%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#26201b;
+  --ink-deep:#181410;
+  --hanji:#f2e8d5;
+  --hanji-dim:#e6d9bf;
+  --cheong:#2c4f8f;
+  --cheong-lite:#4a6fb0;
+  --hong:#b8382a;
+  --hong-lite:#d3564a;
+  --seal:#c9972f;
+  --line:#3a322a;
+  --zone:#79b463;
+  --serif:'Song Myung','Nanum Myeongjo','Noto Serif KR','Apple SD Gothic Neo','Malgun Gothic',serif;
+  --sans:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','맑은 고딕',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  background:var(--ink-deep);
+  background-image:radial-gradient(ellipse at 50% -20%, #2a231c 0%, #181410 65%);
+  color:var(--hanji);
+  font-family:var(--sans);
+  word-break:keep-all;overflow-wrap:break-word;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100dvh;
+  padding:12px 12px 26px;
+}
+
+/* ---------- header ---------- */
+header{
+  width:100%;max-width:560px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 2px 12px;gap:8px;flex-wrap:wrap;
+}
+.title{display:flex;align-items:center;gap:11px;min-width:0}
+.seal{
+  width:44px;height:44px;border-radius:8px;flex:none;
+  background:linear-gradient(135deg,#c03a2b,#8f2417);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:22px;color:#f7ecd8;
+  box-shadow:inset 0 0 0 2px rgba(247,236,216,.35), 0 2px 8px rgba(0,0,0,.5);
+  transform:rotate(-3deg);
+}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(20px,4.4vw,28px);letter-spacing:4px}
+h1 small{display:block;font-family:var(--sans);font-size:10px;letter-spacing:2px;color:#9a8e79;margin-top:3px}
+.hdr-right{display:flex;align-items:center;gap:6px}
+.hbtn{
+  height:44px;min-width:44px;border-radius:22px;padding:0 10px;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:transparent;border:1.5px solid rgba(242,232,213,.4);
+  color:var(--hanji);font-family:var(--sans);font-size:17px;letter-spacing:1px;
+  cursor:pointer;text-decoration:none;transition:border-color .2s,color .2s;
+}
+#btnLang{font-size:13px}
+.hbtn:hover{border-color:var(--seal);color:var(--seal)}
+.hbtn:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+
+/* ---------- HUD ---------- */
+main{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center}
+#hud{
+  width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;margin:0 auto 10px;padding:8px 12px;
+  background:rgba(242,232,213,.05);border:1px solid rgba(242,232,213,.12);border-radius:12px;
+}
+.side{display:flex;align-items:center;gap:7px;font-family:var(--serif);font-size:13px;letter-spacing:1px;min-width:0}
+.side.ai{justify-content:flex-end}
+.side .nm{color:#e8dcc2;white-space:nowrap}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:inset 0 -2px 3px rgba(0,0,0,.4)}
+.dot.c{background:var(--cheong-lite)} .dot.h{background:var(--hong-lite)}
+.pips{display:flex;gap:4px}
+.pip{width:11px;height:11px;border-radius:50%;flex:none;border:1.5px solid rgba(242,232,213,.35);transition:background .2s,transform .2s}
+.pip.c.on{background:var(--cheong-lite);border-color:var(--cheong-lite);transform:scale(1.08)}
+.pip.h.on{background:var(--hong-lite);border-color:var(--hong-lite);transform:scale(1.08)}
+.mid{display:flex;flex-direction:column;align-items:center;gap:3px}
+#roundLbl{font-size:11px;letter-spacing:2px;color:#9a8e79}
+.turn{font-size:12px;letter-spacing:1px;padding:2px 12px;border-radius:11px;border:1px solid transparent;white-space:nowrap}
+.turn.you{color:#8fb0e8;border-color:rgba(74,111,176,.5)}
+.turn.ai{color:#e89a90;border-color:rgba(211,86,74,.5)}
+
+/* ---------- stage ---------- */
+#stageWrap{width:100%;max-width:520px}
+#stage{
+  --tile:clamp(64px,19vw,92px);
+  position:relative;width:100%;aspect-ratio:1/0.9;
+  border-radius:14px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 16%, #241d16 0%, #16110d 72%);
+  box-shadow:inset 0 0 0 1px rgba(58,50,42,.5), inset 0 10px 30px rgba(0,0,0,.5);
+  -webkit-perspective:900px;perspective:900px;
+}
+#ground{
+  position:absolute;left:6%;right:6%;top:44%;bottom:7%;border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(120,95,60,.08) 0 2px, transparent 3px),
+    radial-gradient(circle at 68% 60%, rgba(120,95,60,.07) 0 2px, transparent 3px),
+    radial-gradient(ellipse at 50% 34%, #f4ecda 0%, #e6d6b6 66%, #d8c6a2 100%);
+  box-shadow:0 20px 34px rgba(0,0,0,.45), inset 0 8px 20px rgba(120,95,60,.16), inset 0 -6px 14px rgba(120,95,60,.12);
+  z-index:1;
+}
+.shadow{
+  position:absolute;width:calc(var(--tile)*0.92);height:15px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(40,28,16,.42),rgba(40,28,16,0) 72%);
+  filter:blur(2px);pointer-events:none;z-index:2;transform:translate(-50%,-50%);
+}
+#shadowTarget{left:31%;top:calc(52% + var(--tile)*0.4)}
+#shadowHand{left:63%;top:calc(56% + var(--tile)*0.4);opacity:.7}
+
+.slot{position:absolute;width:var(--tile);height:var(--tile);z-index:3}
+.slot-target{left:calc(31% - var(--tile)/2);top:calc(52% - var(--tile)/2)}
+.slot-hand{left:calc(63% - var(--tile)/2);top:calc(56% - var(--tile)/2);z-index:4}
+
+.tile{
+  position:absolute;inset:0;
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
+  filter:drop-shadow(0 5px 5px rgba(0,0,0,.4));
+}
+.tile.hand{transform:translateY(-118px) rotate(-15deg)}
+.tile-inner{
+  position:absolute;inset:0;
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
+}
+.face{
+  position:absolute;inset:0;border-radius:9px;overflow:hidden;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  box-shadow:inset 0 0 0 2px rgba(20,12,6,.28), 0 1px 0 rgba(255,255,255,.12);
+}
+.face.back{transform:rotateX(180deg)}
+.tile.flipped .tile-inner{transform:rotateX(180deg)}
+svg{display:block;width:100%;height:100%}
+
+/* impact burst */
+#burst{
+  position:absolute;left:31%;top:44%;width:88px;height:88px;
+  transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;z-index:6;
+  background:radial-gradient(circle, rgba(255,241,214,.92) 0%, rgba(201,151,47,.4) 42%, transparent 70%);
+}
+#burst.go{animation:burst .42s ease-out}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.2);opacity:.95}100%{transform:translate(-50%,-50%) scale(1.7);opacity:0}}
+
+/* animations */
+@keyframes slam{
+  0%{transform:translateY(-118px) rotate(-15deg)}
+  22%{transform:translateY(-142px) rotate(-21deg) scale(1.04)}
+  55%{transform:translateY(14px) rotate(7deg) scale(1)}
+  66%{transform:translateY(6px) rotate(5deg) scaleY(.9) scaleX(1.06)}
+  80%{transform:translateY(-32px) rotate(-6deg)}
+  100%{transform:translateY(-118px) rotate(-15deg)}
+}
+.tile.hand.slam{animation:slam .62s cubic-bezier(.3,.7,.35,1)}
+@keyframes flip{
+  0%{transform:rotateX(0deg) translateY(0) scale(1)}
+  28%{transform:rotateX(82deg) translateY(-44px) scale(1.06)}
+  60%{transform:rotateX(150deg) translateY(-20px) scale(1.02)}
+  100%{transform:rotateX(180deg) translateY(0) scale(1)}
+}
+.tile-inner.flip{animation:flip .6s cubic-bezier(.25,.85,.3,1) forwards}
+@keyframes flipwob{
+  0%{transform:rotateX(0deg) rotateZ(0) translateY(0)}
+  26%{transform:rotateX(64deg) rotateZ(-6deg) translateY(-26px)}
+  52%{transform:rotateX(116deg) rotateZ(5deg) translateY(-13px)}
+  76%{transform:rotateX(168deg) rotateZ(-3deg) translateY(-3px)}
+  90%{transform:rotateX(189deg) rotateZ(2deg) translateY(0)}
+  100%{transform:rotateX(180deg) rotateZ(0) translateY(0)}
+}
+.tile-inner.flipwob{animation:flipwob .72s cubic-bezier(.3,.7,.4,1) forwards}
+@keyframes noflip{
+  0%{transform:rotateX(0deg) rotateZ(0) translateY(0)}
+  22%{transform:rotateX(54deg) rotateZ(-5deg) translateY(-15px)}
+  44%{transform:rotateX(24deg) rotateZ(4deg) translateY(-4px)}
+  68%{transform:rotateX(-6deg) rotateZ(-2deg) translateY(0)}
+  100%{transform:rotateX(0deg) rotateZ(0) translateY(0)}
+}
+.tile-inner.noflip{animation:noflip .58s ease-out}
+@keyframes shake{
+  0%,100%{transform:translate(0,0)}
+  15%{transform:translate(-7px,3px)}
+  30%{transform:translate(6px,-4px)}
+  45%{transform:translate(-5px,4px)}
+  60%{transform:translate(5px,-2px)}
+  75%{transform:translate(-3px,2px)}
+}
+#stage.shake{animation:shake .4s ease-in-out}
+
+/* ---------- controls ---------- */
+#controls{width:100%;max-width:520px;margin:12px auto 0;display:flex;flex-direction:column;gap:11px}
+.status{min-height:46px;font-size:15px;line-height:1.45;color:#efe4cd;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 4px}
+.status b{color:var(--seal)}
+#meterBox{display:flex;flex-direction:column;gap:9px}
+.meter-label{font-size:12px;letter-spacing:1px;color:#9a8e79;text-align:center}
+#meter{
+  position:relative;height:40px;border-radius:11px;
+  background:linear-gradient(180deg,#1c1712,#2a231c);
+  border:1.5px solid rgba(242,232,213,.18);
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.55);
+  overflow:hidden;cursor:pointer;touch-action:none;
+}
+#zone{
+  position:absolute;top:0;bottom:0;
+  background:linear-gradient(90deg,rgba(121,180,99,.32),rgba(140,206,110,.82) 50%,rgba(121,180,99,.32));
+  border-left:1px solid rgba(190,235,160,.55);border-right:1px solid rgba(190,235,160,.55);
+  box-shadow:0 0 12px rgba(120,200,90,.4);
+}
+#zone::after{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:2px;transform:translateX(-50%);background:rgba(235,255,215,.9);border-radius:1px}
+#marker{
+  position:absolute;top:-3px;bottom:-3px;width:6px;margin-left:-3px;left:50%;
+  background:linear-gradient(180deg,#e7c063,#c9972f);border-radius:3px;
+  box-shadow:0 0 9px rgba(201,151,47,.75);
+}
+#marker::before{
+  content:"";position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #e7c063;
+}
+#marker.hit{background:linear-gradient(180deg,#b6e88f,#79b463);box-shadow:0 0 11px rgba(140,220,110,.9)}
+#marker.hit::before{border-top-color:#b6e88f}
+#marker.missmark{background:linear-gradient(180deg,#e0857a,#b8382a);box-shadow:0 0 11px rgba(211,86,74,.8)}
+#marker.missmark::before{border-top-color:#e0857a}
+#btnLock{
+  width:100%;background:linear-gradient(160deg,#e7c063,#c9972f);
+  color:#1d160c;font-family:var(--sans);font-weight:bold;font-size:18px;letter-spacing:3px;
+  border:none;border-radius:11px;padding:15px;min-height:54px;cursor:pointer;
+  box-shadow:0 3px 14px rgba(201,151,47,.4);transition:transform .08s,opacity .2s,box-shadow .2s;
+}
+#btnLock:active{transform:translateY(1px)}
+#btnLock:disabled{opacity:.4;cursor:default;box-shadow:none}
+
+/* ---------- modals ---------- */
+.modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(16,12,9,.88);z-index:60;padding:20px;
+}
+.modal.hidden{display:none}
+.modal-box{
+  background:var(--hanji);color:var(--ink);
+  border-radius:12px;padding:28px 24px;max-width:440px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);
+  max-height:92dvh;overflow-y:auto;
+}
+.modal-box h2{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:5px;margin-bottom:6px}
+.modal-box .sub{font-size:13px;color:#6d5f4a;letter-spacing:1px;margin-bottom:18px}
+.howto{list-style:none;text-align:left;margin-bottom:18px}
+.howto li{display:flex;gap:12px;margin-bottom:12px;font-size:14px;line-height:1.6;color:#443a2c}
+.howto .num{
+  flex:none;width:26px;height:26px;border-radius:50%;
+  background:var(--ink);color:var(--hanji);
+  display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:2px;
+}
+.howto b{color:var(--hong)}
+.howto .gold{color:#8a6a1c;font-weight:bold}
+.set-label{font-size:12px;letter-spacing:2px;color:#6d5f4a;margin-bottom:10px}
+.opt-row{display:flex;gap:10px;justify-content:center;margin-bottom:8px;flex-wrap:wrap}
+.opt{
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  border-radius:8px;padding:11px 18px;font-size:14px;min-height:44px;cursor:pointer;
+  font-family:var(--sans);transition:background .15s,color .15s;
+}
+.opt.sel{background:var(--ink);color:var(--hanji)}
+.diff-row{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
+.diff{
+  width:52px;min-height:48px;padding:11px 0;border-radius:8px;font-size:17px;cursor:pointer;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-family:var(--sans);
+  transition:background .15s,color .15s;
+}
+.diff.sel{background:var(--hong);border-color:var(--hong);color:var(--hanji);font-weight:bold}
+.diff-name{font-size:13px;color:#8a6a1c;margin-bottom:16px;min-height:18px}
+.go{
+  width:100%;background:var(--ink);color:var(--hanji);border:none;border-radius:8px;
+  font-family:var(--sans);font-size:17px;letter-spacing:3px;padding:15px;cursor:pointer;min-height:52px;
+  transition:transform .08s;
+}
+.go:active{transform:translateY(1px)}
+#endTitle{font-size:34px}
+.footer-note{margin-top:14px;font-size:12px;color:#7d715c;letter-spacing:1px;text-align:center}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important}
+  .tile.hand{transform:translateY(-46px) rotate(-10deg)}
+  .pip{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <div class="seal">딱</div>
+    <h1><span id="hTitle">딱지치기</span><small id="hSub">PAPER-TILE FLIP · 딱지 대결</small></h1>
+  </div>
+  <div class="hdr-right">
+    <button class="hbtn" id="btnSound" title="Sound" aria-label="Sound">🔊</button>
+    <button class="hbtn" id="btnLang">EN</button>
+    <button class="hbtn" id="btnHelp" title="Help" aria-label="Help">?</button>
+    <a class="hbtn" id="btnBack" href="../../index.html?lang=en" title="Back" aria-label="Back">←</a>
+  </div>
+</header>
+
+<main>
+  <div id="hud">
+    <div class="side you"><span class="dot c"></span><span class="nm" id="youLbl"></span><span class="pips" id="pipsYou"></span></div>
+    <div class="mid"><div id="roundLbl"></div><div class="turn you" id="turnLbl"></div></div>
+    <div class="side ai"><span class="pips" id="pipsAi"></span><span class="nm" id="aiLbl"></span><span class="dot h"></span></div>
+  </div>
+
+  <div id="stageWrap">
+    <div id="stage">
+      <div id="ground"></div>
+      <div class="shadow" id="shadowTarget"></div>
+      <div class="shadow" id="shadowHand"></div>
+      <div class="slot slot-target">
+        <div class="tile" id="targetTile"><div class="tile-inner"><div class="face front"></div><div class="face back"></div></div></div>
+      </div>
+      <div class="slot slot-hand">
+        <div class="tile hand" id="handTile"><div class="tile-inner"><div class="face front"></div></div></div>
+      </div>
+      <div id="burst"></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div class="status" id="status"></div>
+    <div id="meterBox">
+      <div class="meter-label" id="meterLabel"></div>
+      <div id="meter"><div id="zone"></div><div id="marker"></div></div>
+    </div>
+    <button id="btnLock"></button>
+  </div>
+</main>
+
+<div class="modal" id="startModal"><div class="modal-box" id="startBox"></div></div>
+<div class="modal hidden" id="helpModal"><div class="modal-box" id="helpBox"></div></div>
+<div class="modal hidden" id="endModal">
+  <div class="modal-box">
+    <h2 id="endTitle"></h2>
+    <div class="sub" id="endSub"></div>
+    <button class="go" id="btnAgain"></button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= i18n ================= */
+const L={
+ko:{
+  title:'딱지치기', sub:'PAPER-TILE FLIP · 딱지 대결',
+  youLbl:'나 · 청', aiLbl:'AI · 홍',
+  roundLbl:r=>'라운드 '+r, turnYou:'내 차례', turnAi:'AI 차례',
+  meterLabel:'금색 마커가 초록 칸에 오면 내리쳐!',
+  lockBtn:'내리쳐!',
+  stReady:'마커가 <b>초록 칸</b>에 올 때 내리쳐서 상대 딱지를 뒤집으세요!',
+  stAiAim:'AI가 겨냥하고 있어요…',
+  stYouClean:'짝! 깔끔하게 뒤집었어요! +1',
+  stYouWob:'아슬아슬… 넘어갔다! +1',
+  stYouSoClose:'앗, 아깝게 안 넘어갔어요.',
+  stYouMissZone:'빗나갔어요. 초록 칸을 노려요!',
+  stAiClean:'AI가 내 딱지를 뒤집었어요!',
+  stAiWob:'AI가 아슬아슬하게 뒤집었어요.',
+  stAiMiss:'AI가 헛쳤어요 — 내 딱지 안전!',
+  winTitle:'승리!', loseTitle:'패배',
+  endSub:(s0,s1)=>'최종 스코어 '+s0+' : '+s1,
+  again:'다시 하기',
+  startH:'딱지치기', startSub:'타이밍 맞춰 내리쳐, 상대 딱지를 뒤집자!',
+  startSteps:'<li><span class="num">1</span><span>파워 미터의 마커가 <span class="gold">초록 칸</span>에 들어올 때 <b>내리쳐!</b>를 누르세요.</span></li>'+
+    '<li><span class="num">2</span><span>칸 <b>한가운데</b>에 맞출수록 확실하게 뒤집혀요. 가장자리는 아슬아슬!</span></li>'+
+    '<li><span class="num">3</span><span>성공하면 상대 딱지를 뒤집고 <b>1점</b>. AI도 번갈아 내 딱지를 노려요.</span></li>'+
+    '<li><span class="num">4</span><span>먼저 <b>목표 횟수</b>만큼 뒤집으면 승리!</span></li>',
+  diffLabel:'난이도',
+  diffNames:['쉬움','보통','어려움'],
+  diffDesc:['넓은 칸 · 느긋한 AI','알맞은 칸 · 제법 하는 AI','좁은 칸 · 매서운 AI'],
+  lenLabel:'목표 (먼저 뒤집기)',
+  lenDesc:n=>n+'번 먼저 뒤집으면 승리',
+  startBtn:'시작', startFoot:'내가 먼저 공격합니다',
+  helpH:'노는 법', helpSub:'겨냥 → 내리치기 → 뒤집기',
+  helpSteps:'<li><span class="num">1</span><span><b>겨냥</b> — 금색 마커가 좌우로 왕복해요. <span class="gold">초록 칸</span>을 노리세요.</span></li>'+
+    '<li><span class="num">2</span><span><b>내리치기</b> — <b>내리쳐!</b> 버튼(또는 스페이스바·화면 탭)으로 마커를 멈춥니다.</span></li>'+
+    '<li><span class="num">3</span><span><b>뒤집기</b> — 초록 칸 안에서 멈추면 바람을 일으켜 상대 딱지를 뒤집어요. 가운데일수록 강력!</span></li>'+
+    '<li><span class="num">4</span><span><b>가장자리</b> — 칸 끝에서 멈추면 아슬아슬하게 넘어가거나 살짝 빗나가요.</span></li>'+
+    '<li><span class="num">5</span><span><b>AI 차례</b> — AI가 같은 방식으로 내 딱지를 노립니다. 난이도가 높을수록 잘 맞혀요.</span></li>'+
+    '<li><span class="num">6</span><span><b>승리</b> — 목표 횟수를 먼저 채우는 쪽이 이깁니다.</span></li>',
+  helpClose:'알겠어요',
+},
+en:{
+  title:'Ddakji', sub:'KOREAN PAPER-TILE FLIP',
+  youLbl:'You · Blue', aiLbl:'AI · Red',
+  roundLbl:r=>'Round '+r, turnYou:'Your turn', turnAi:"AI's turn",
+  meterLabel:'Slam when the gold marker hits the green!',
+  lockBtn:'SLAM!',
+  stReady:'Slam when the marker slides into the <b>green zone</b> to flip your rival’s tile!',
+  stAiAim:'The AI is taking aim…',
+  stYouClean:'SLAP! A clean flip! +1',
+  stYouWob:'Wobbles… and it flips! +1',
+  stYouSoClose:'So close — it didn’t flip.',
+  stYouMissZone:'Missed the zone — aim for the green!',
+  stAiClean:'The AI flipped your tile!',
+  stAiWob:'The AI just barely flipped it.',
+  stAiMiss:'The AI whiffed — your tile stands!',
+  winTitle:'You win!', loseTitle:'You lose',
+  endSub:(s0,s1)=>'Final score '+s0+' : '+s1,
+  again:'Play again',
+  startH:'Ddakji', startSub:'Time your slam and flip the tiles!',
+  startSteps:'<li><span class="num">1</span><span>When the marker slides into the <span class="gold">green zone</span>, hit <b>SLAM!</b>.</span></li>'+
+    '<li><span class="num">2</span><span>The closer to the <b>center</b>, the surer the flip. The edges are a coin-toss!</span></li>'+
+    '<li><span class="num">3</span><span>A flip turns the opponent’s tile and scores <b>1 point</b>. The AI takes its own shots at your tile.</span></li>'+
+    '<li><span class="num">4</span><span>First to reach the <b>target flips</b> wins the match!</span></li>',
+  diffLabel:'DIFFICULTY',
+  diffNames:['Easy','Normal','Hard'],
+  diffDesc:['Wide zone · gentle AI','Fair zone · solid AI','Tight zone · sharp AI'],
+  lenLabel:'FIRST TO FLIP',
+  lenDesc:n=>'First to '+n+' flip'+(n>1?'s':'')+' wins',
+  startBtn:'Start', startFoot:'You attack first',
+  helpH:'How to play', helpSub:'Aim → slam → flip',
+  helpSteps:'<li><span class="num">1</span><span><b>Aim</b> — a golden marker sweeps back and forth. Target the <span class="gold">green zone</span>.</span></li>'+
+    '<li><span class="num">2</span><span><b>Slam</b> — press <b>SLAM!</b> (or Space, or tap the screen) to stop the marker.</span></li>'+
+    '<li><span class="num">3</span><span><b>Flip</b> — stopping inside the green zone flips the opponent’s tile. Dead center hits hardest!</span></li>'+
+    '<li><span class="num">4</span><span><b>Edges</b> — stop near the edge and it barely flips — or barely misses.</span></li>'+
+    '<li><span class="num">5</span><span><b>AI turn</b> — the AI takes the same shot at your tile. Higher difficulty aims better.</span></li>'+
+    '<li><span class="num">6</span><span><b>Win</b> — first to the target number of flips wins.</span></li>',
+  helpClose:'Got it',
+}};
+/* ?lang= 이 있으면 그것, 없으면 영어. 허브(index.html)와 같은 규칙 — 한쪽만 바꾸지 말 것. */
+const _qp=new URLSearchParams(location.search).get('lang');
+let lang=(_qp==='en'||_qp==='ko')?_qp:'en';
+const t=(k,...a)=>{const v=L[lang][k];return typeof v==='function'?v(...a):v;};
+
+/* ================= difficulty ================= */
+const DIFF={
+  easy:  {zoneHalf:0.19,  period:1500, ai:0.42},
+  normal:{zoneHalf:0.125, period:1120, ai:0.63},
+  hard:  {zoneHalf:0.072, period:820,  ai:0.80},
+};
+let diff='normal', targetScore=3;
+
+/* ================= tile colours & art ================= */
+const COL={
+  cheong:{base:'#2c4f8f',lite:'#5a7fbf',dark:'#1f3768'},
+  hong:  {base:'#b8382a',lite:'#d3564a',dark:'#8f2417'},
+};
+const wrapSVG=i=>'<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'+i+'</svg>';
+function frontInner(c){
+  const P={T:[50,4],TR:[96,4],R:[96,50],BR:[96,96],B:[50,96],BL:[4,96],L:[4,50],TL:[4,4]};
+  const tri=(a,b,f)=>'<polygon points="50,50 '+a[0]+','+a[1]+' '+b[0]+','+b[1]+'" fill="'+f+'"/>';
+  let g='<rect x="3" y="3" width="94" height="94" rx="8" fill="'+c.base+'"/>';
+  g+=tri(P.T,P.TR,c.lite)+tri(P.TR,P.R,c.base)+tri(P.R,P.BR,c.lite)+tri(P.BR,P.B,c.base)
+    +tri(P.B,P.BL,c.lite)+tri(P.BL,P.L,c.base)+tri(P.L,P.TL,c.lite)+tri(P.TL,P.T,c.base);
+  const cr=p=>'<line x1="50" y1="50" x2="'+p[0]+'" y2="'+p[1]+'" stroke="'+c.dark+'" stroke-width="1.1" opacity=".45"/>';
+  for(const k in P) g+=cr(P[k]);
+  g+='<circle cx="50" cy="50" r="7" fill="'+c.dark+'"/><circle cx="50" cy="50" r="3.4" fill="'+c.lite+'"/>';
+  g+='<path d="M9 21 Q30 7 60 10" stroke="rgba(255,255,255,.22)" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  return g;
+}
+function backInner(c){
+  return '<rect x="3" y="3" width="94" height="94" rx="8" fill="#e5d6b8"/>'
+    +'<line x1="10" y1="10" x2="90" y2="90" stroke="'+c.base+'" stroke-width="2.4" opacity=".5"/>'
+    +'<line x1="90" y1="10" x2="10" y2="90" stroke="'+c.base+'" stroke-width="2.4" opacity=".5"/>'
+    +'<line x1="50" y1="6" x2="50" y2="94" stroke="'+c.dark+'" stroke-width="1.4" opacity=".32"/>'
+    +'<line x1="6" y1="50" x2="94" y2="50" stroke="'+c.dark+'" stroke-width="1.4" opacity=".32"/>'
+    +'<rect x="40" y="40" width="20" height="20" fill="'+c.base+'" opacity=".55" transform="rotate(45 50 50)"/>'
+    +'<rect x="3" y="3" width="94" height="94" rx="8" fill="none" stroke="'+c.dark+'" stroke-width="3"/>';
+}
+
+/* ================= sound (WebAudio, zero assets) ================= */
+let audioCtx=null, muted=false;
+const reduceMQ=matchMedia('(prefers-reduced-motion: reduce)');
+const prefersReduced=()=>reduceMQ.matches;
+const vib=p=>{
+  if(muted) return;
+  if(prefersReduced()) return;
+  try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){}
+};
+function ac(){
+  if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq,dur,type,vol,when,slide){
+  const c=ac(); if(!c) return;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,c.currentTime+when);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide,c.currentTime+when+dur);
+  g.gain.setValueAtTime(0.0001,c.currentTime+when);
+  g.gain.exponentialRampToValueAtTime(vol,c.currentTime+when+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+when+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+when); o.stop(c.currentTime+when+dur+0.05);
+}
+function noiseBurst(dur,curve,filterType,freq,Q,vol,when){
+  const c=ac(); if(!c) return;
+  const len=Math.max(1,Math.floor(c.sampleRate*dur)), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,curve);
+  const s=c.createBufferSource(); s.buffer=buf;
+  const f=c.createBiquadFilter(); f.type=filterType; f.frequency.value=freq; if(Q) f.Q.value=Q;
+  const g=c.createGain(); g.gain.value=vol;
+  s.connect(f); f.connect(g); g.connect(c.destination);
+  s.start(c.currentTime+(when||0));
+}
+function whoosh(){
+  const c=ac(); if(!c) return;
+  const len=Math.floor(c.sampleRate*0.32), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++){const k=i/len; d[i]=(Math.random()*2-1)*Math.pow(1-k,1.4);}
+  const s=c.createBufferSource(); s.buffer=buf;
+  const f=c.createBiquadFilter(); f.type='bandpass'; f.Q.value=0.8;
+  f.frequency.setValueAtTime(280,c.currentTime);
+  f.frequency.exponentialRampToValueAtTime(1500,c.currentTime+0.17);
+  f.frequency.exponentialRampToValueAtTime(480,c.currentTime+0.32);
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.15,c.currentTime+0.05);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.32);
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+}
+function sfx(kind){
+  if(muted||!ac()) return;
+  switch(kind){
+    case 'whoosh': whoosh(); break;
+    case 'slap': noiseBurst(0.06,3.2,'highpass',1200,0,0.55,0); tone(150,0.14,'sine',0.5,0,60); break;
+    case 'riffle': for(let i=0;i<6;i++) noiseBurst(0.03,2.4,'bandpass',1600+Math.random()*900,1.4,0.15*(1-i/8),0.02+i*0.035); break;
+    case 'miss': tone(165,0.18,'sine',0.28,0,95); tone(120,0.2,'triangle',0.16,0.02,80); break;
+    case 'lock': tone(720,0.05,'square',0.12,0); break;
+    case 'ui': tone(500,0.05,'sine',0.08,0); break;
+    case 'win': [523,659,784,1047].forEach((f,i)=>tone(f,0.24,'triangle',0.2,i*0.13)); break;
+    case 'lose': [392,330,262].forEach((f,i)=>tone(f,0.28,'triangle',0.16,i*0.16)); break;
+  }
+}
+
+/* ================= elements ================= */
+const $=id=>document.getElementById(id);
+const stage=$('stage'), targetTile=$('targetTile'), handTile=$('handTile'), burst=$('burst');
+const targetInner=targetTile.querySelector('.tile-inner');
+const tFront=targetTile.querySelector('.face.front'), tBack=targetTile.querySelector('.face.back');
+const hFront=handTile.querySelector('.face.front');
+const meter=$('meter'), zone=$('zone'), marker=$('marker'), btnLock=$('btnLock');
+const statusEl=$('status');
+const youLbl=$('youLbl'), aiLbl=$('aiLbl'), roundLbl=$('roundLbl'), turnLbl=$('turnLbl');
+const pipsYou=$('pipsYou'), pipsAi=$('pipsAi');
+const startModal=$('startModal'), startBox=$('startBox');
+const helpModal=$('helpModal'), helpBox=$('helpBox');
+const endModal=$('endModal'), endTitle=$('endTitle'), endSub=$('endSub');
+const btnAgain=$('btnAgain'), btnLang=$('btnLang'), btnBack=$('btnBack');
+
+/* ================= state ================= */
+let state=null, rafId=0, lastStatus=null;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ================= rendering helpers ================= */
+function setStatus(k,...a){ lastStatus=[k,a]; statusEl.innerHTML=t(k,...a); }
+function setLock(on){ btnLock.disabled=!on; }
+function positionMarker(pos){ marker.style.left=(pos*100)+'%'; }
+function pipStr(filled,cls){
+  let s='';
+  for(let i=0;i<targetScore;i++) s+='<span class="pip '+cls+(i<filled?' on':'')+'"></span>';
+  return s;
+}
+function updateHUD(){
+  const turn=state?state.turn:0, round=state?state.round:1;
+  const s0=state?state.scores[0]:0, s1=state?state.scores[1]:0;
+  youLbl.textContent=t('youLbl'); aiLbl.textContent=t('aiLbl');
+  roundLbl.textContent=t('roundLbl',round);
+  turnLbl.textContent=turn===1?t('turnAi'):t('turnYou');
+  turnLbl.className='turn '+(turn===1?'ai':'you');
+  pipsYou.innerHTML=pipStr(s0,'c'); pipsAi.innerHTML=pipStr(s1,'h');
+}
+function paintTiles(){
+  const turn=state?state.turn:0;
+  const tgt=turn===1?COL.cheong:COL.hong;   /* on ground: player-turn=red rival, ai-turn=your blue */
+  const hnd=turn===1?COL.hong:COL.cheong;   /* in hand:   player-turn=you blue, ai-turn=AI red */
+  tFront.innerHTML=wrapSVG(frontInner(tgt));
+  tBack.innerHTML=wrapSVG(backInner(tgt));
+  hFront.innerHTML=wrapSVG(frontInner(hnd));
+}
+function restartAnim(el,cls){
+  el.classList.remove('slam','flip','flipwob','noflip');
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+function resetScene(){
+  cancelSweep();
+  handTile.classList.remove('slam');
+  targetInner.classList.remove('flip','flipwob','noflip');
+  targetTile.classList.remove('flipped');
+  marker.classList.remove('hit','missmark');
+  burst.classList.remove('go');
+  void targetInner.offsetWidth;
+  paintTiles();
+}
+function flashBurst(){ burst.classList.remove('go'); void burst.offsetWidth; burst.classList.add('go'); }
+function shakeStage(){ stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); setTimeout(()=>stage.classList.remove('shake'),420); }
+
+/* ================= zone & sweep ================= */
+function setupZone(){
+  const d=DIFF[diff];
+  const h=d.zoneHalf;
+  let c=0.3+Math.random()*0.4;
+  c=Math.max(h+0.04, Math.min(1-h-0.04, c));
+  if(state){ state.zoneCenter=c; state.zoneHalf=h; }
+  zone.style.left=((c-h)*100)+'%';
+  zone.style.width=(2*h*100)+'%';
+  return {c,h};
+}
+function cancelSweep(){ if(rafId){ cancelAnimationFrame(rafId); rafId=0; } }
+function startSweep(auto){
+  state.phase='sweeping';
+  state.sweepStart=performance.now();
+  if(auto) state.aiMinTime=state.sweepStart+600+Math.random()*700;
+  cancelSweep();
+  rafId=requestAnimationFrame(sweepFrame);
+}
+function sweepFrame(now){
+  if(!state||state.phase!=='sweeping'){ rafId=0; return; }
+  const per=DIFF[diff].period;
+  const cyc=((now-state.sweepStart)%per)/per;
+  const prev=state.markerPos;
+  state.markerPos=cyc<0.5?cyc*2:2-cyc*2;
+  positionMarker(state.markerPos);
+  if(state.turn===1 && now>=state.aiMinTime){
+    if((prev-state.aiLockPos)*(state.markerPos-state.aiLockPos)<=0){
+      state.markerPos=state.aiLockPos; positionMarker(state.aiLockPos);
+      resolveAttempt(state.aiLockPos, state.aiResult); return;
+    }
+  }
+  rafId=requestAnimationFrame(sweepFrame);
+}
+
+/* ================= evaluation ================= */
+function evaluate(pos){
+  const d=Math.abs(pos-state.zoneCenter);
+  if(d>state.zoneHalf) return {flip:false,kind:'miss',q:0};
+  const q=1-d/state.zoneHalf;
+  if(q>=0.4) return {flip:true,kind:'clean',q};
+  const p=0.5+q;                       /* edge band: 0.5..0.9 chance */
+  if(Math.random()<p) return {flip:true,kind:'wobble',q};
+  return {flip:false,kind:'wobblemiss',q};
+}
+function decideAI(){
+  const acc=DIFF[diff].ai, c=state.zoneCenter, h=state.zoneHalf;
+  const flip=Math.random()<acc;
+  let pos, kind;
+  if(flip){
+    const f=Math.max(0.2, 0.92-acc*0.55);
+    pos=c+(Math.random()*2-1)*h*f;
+    pos=Math.max(0.02,Math.min(0.98,pos));
+    const q=1-Math.abs(pos-c)/h;
+    kind=q>=0.4?'clean':'wobble';
+  }else{
+    const side=Math.random()<0.5?-1:1;
+    pos=c+side*(h+0.02+Math.random()*0.07);
+    pos=Math.max(0.03,Math.min(0.97,pos));
+    kind='miss';
+  }
+  return {flip,kind,pos,q:0};
+}
+
+/* ================= attempt resolution ================= */
+function showResultStatus(who,r){
+  const you=who===0;
+  let key;
+  if(r.flip) key=you?(r.kind==='clean'?'stYouClean':'stYouWob'):(r.kind==='clean'?'stAiClean':'stAiWob');
+  else if(you) key=(r.kind==='miss')?'stYouMissZone':'stYouSoClose';
+  else key='stAiMiss';
+  setStatus(key);
+}
+async function slamAndFlip(r){
+  const reduce=prefersReduced();
+  restartAnim(handTile,'slam');
+  sfx('whoosh');
+  await wait(reduce?40:360);
+  sfx('slap'); flashBurst();
+  vib(r.flip&&r.kind==='clean'?40:22);
+  if(r.flip){
+    restartAnim(targetInner, r.kind==='clean'?'flip':'flipwob');
+    targetTile.classList.add('flipped');
+    if(r.kind==='clean') shakeStage();
+    setTimeout(()=>sfx('riffle'), reduce?0:120);
+  }else{
+    restartAnim(targetInner,'noflip');
+    sfx('miss');
+  }
+  await wait(reduce?140:760);
+  handTile.classList.remove('slam');
+}
+async function resolveAttempt(pos,result){
+  if(!state||state.phase==='resolving'||state.phase==='over') return;
+  state.phase='resolving';
+  cancelSweep();
+  positionMarker(pos);
+  marker.classList.add(result.flip?'hit':'missmark');
+  setLock(false);
+  sfx('lock'); vib(8);
+  await slamAndFlip(result);
+  const who=state.turn;
+  if(result.flip) state.scores[who]++;
+  updateHUD();
+  showResultStatus(who,result);
+  await wait(prefersReduced()?320:660);
+  if(state.scores[who]>=targetScore){ endMatch(who); return; }
+  nextTurn();
+}
+
+/* ================= turn flow ================= */
+function startPlayerTurn(){
+  state.turn=0; state.phase='ready';
+  resetScene(); updateHUD(); setupZone();
+  state.markerPos=0.5; positionMarker(0.5);
+  setStatus('stReady'); setLock(true);
+  startSweep(false);
+}
+function startAiTurn(){
+  state.turn=1; state.phase='ready';
+  resetScene(); updateHUD(); setupZone();
+  state.markerPos=0.5; positionMarker(0.5);
+  setStatus('stAiAim'); setLock(false);
+  const r=decideAI();
+  state.aiResult={flip:r.flip,kind:r.kind,q:r.q};
+  state.aiLockPos=r.pos;
+  startSweep(true);
+}
+function nextTurn(){
+  if(state.turn===0){ startAiTurn(); }
+  else { state.round++; startPlayerTurn(); }
+}
+function endMatch(who){
+  state.phase='over';
+  cancelSweep(); setLock(false);
+  updateHUD();
+  const win=who===0;
+  endTitle.textContent=win?t('winTitle'):t('loseTitle');
+  endSub.textContent=t('endSub',state.scores[0],state.scores[1]);
+  sfx(win?'win':'lose'); vib(win?[80,50,80]:[60]);
+  endModal.classList.remove('hidden');
+}
+function newGame(){
+  state={scores:[0,0],round:1,turn:0,phase:'ready',markerPos:0.5,zoneCenter:0.5,zoneHalf:DIFF[diff].zoneHalf,sweepStart:0,aiMinTime:0,aiLockPos:0.5,aiResult:null};
+  updateHUD();
+  startPlayerTurn();
+}
+
+/* ================= player input ================= */
+function lockNow(){
+  if(!state||state.turn!==0||state.phase!=='sweeping') return;
+  const pos=state.markerPos;
+  resolveAttempt(pos, evaluate(pos));
+}
+btnLock.addEventListener('click',lockNow);
+meter.addEventListener('pointerdown',e=>{ e.preventDefault(); lockNow(); });
+stage.addEventListener('pointerdown',()=>{ lockNow(); });
+window.addEventListener('keydown',e=>{
+  if(e.key===' '||e.key==='Enter'||e.key==='Spacebar'){
+    if(state&&state.turn===0&&state.phase==='sweeping'){ e.preventDefault(); lockNow(); }
+  }
+});
+
+/* ================= modals & language ================= */
+function buildStartModal(){
+  const diffs=['easy','normal','hard'];
+  startBox.innerHTML=
+    '<h2>'+t('startH')+'</h2>'+
+    '<div class="sub">'+t('startSub')+'</div>'+
+    '<ul class="howto">'+t('startSteps')+'</ul>'+
+    '<div class="set-label">'+t('diffLabel')+'</div>'+
+    '<div class="opt-row">'+diffs.map((d,i)=>'<button class="opt dif'+(diff===d?' sel':'')+'" data-d="'+d+'">'+t('diffNames')[i]+'</button>').join('')+'</div>'+
+    '<div class="diff-name" id="difDesc">'+t('diffDesc')[diffs.indexOf(diff)]+'</div>'+
+    '<div class="set-label">'+t('lenLabel')+'</div>'+
+    '<div class="diff-row">'+[1,3,5].map(n=>'<button class="diff len'+(targetScore===n?' sel':'')+'" data-n="'+n+'">'+n+'</button>').join('')+'</div>'+
+    '<div class="diff-name" id="lenDesc">'+t('lenDesc',targetScore)+'</div>'+
+    '<button class="go" id="btnStart">'+t('startBtn')+'</button>'+
+    '<div class="footer-note">'+t('startFoot')+'</div>';
+  startBox.querySelectorAll('.dif').forEach(b=>b.addEventListener('click',()=>{
+    startBox.querySelectorAll('.dif').forEach(x=>x.classList.remove('sel')); b.classList.add('sel');
+    diff=b.dataset.d;
+    $('difDesc').textContent=t('diffDesc')[diffs.indexOf(diff)];
+    sfx('ui');
+  }));
+  startBox.querySelectorAll('.len').forEach(b=>b.addEventListener('click',()=>{
+    startBox.querySelectorAll('.len').forEach(x=>x.classList.remove('sel')); b.classList.add('sel');
+    targetScore=+b.dataset.n;
+    $('lenDesc').textContent=t('lenDesc',targetScore);
+    sfx('ui');
+  }));
+  $('btnStart').addEventListener('click',()=>{
+    sfx('ui');
+    startModal.classList.add('hidden');
+    newGame();
+  });
+}
+function buildHelpModal(){
+  helpBox.innerHTML=
+    '<h2 style="font-size:26px;letter-spacing:3px">'+t('helpH')+'</h2>'+
+    '<div class="sub">'+t('helpSub')+'</div>'+
+    '<ul class="howto">'+t('helpSteps')+'</ul>'+
+    '<button class="go" id="btnCloseHelp">'+t('helpClose')+'</button>';
+  $('btnCloseHelp').addEventListener('click',()=>helpModal.classList.add('hidden'));
+}
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.title=lang==='ko'
+    ? '딱지치기 · Ddakji — 종이딱지 뒤집기 게임'
+    : 'Ddakji · 딱지치기 — Korean paper-tile flip game';
+  $('hTitle').textContent=t('title');
+  $('hSub').textContent=t('sub');
+  btnLang.textContent=lang==='ko'?'EN':'한국어';
+  btnBack.href='../../index.html?lang='+lang;
+  $('meterLabel').textContent=t('meterLabel');
+  btnLock.textContent=t('lockBtn');
+  btnAgain.textContent=t('again');
+  updateHUD();
+  buildStartModal();
+  buildHelpModal();
+  if(lastStatus) setStatus(lastStatus[0],...lastStatus[1]);
+  if(state&&state.phase==='over'){
+    const win=state.scores[0]>=targetScore;
+    endTitle.textContent=win?t('winTitle'):t('loseTitle');
+    endSub.textContent=t('endSub',state.scores[0],state.scores[1]);
+  }
+}
+btnLang.addEventListener('click',()=>{ lang=(lang==='ko')?'en':'ko'; applyLang(); });
+$('btnHelp').addEventListener('click',()=>{ sfx('ui'); helpModal.classList.remove('hidden'); });
+$('btnSound').addEventListener('click',e=>{
+  muted=!muted;
+  e.currentTarget.textContent=muted?'🔇':'🔊';
+  if(!muted) sfx('ui');
+});
+btnAgain.addEventListener('click',()=>{
+  sfx('ui');
+  endModal.classList.add('hidden');
+  buildStartModal();
+  startModal.classList.remove('hidden');
+});
+
+/* first-gesture audio unlock */
+['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,()=>ac(),{once:true,passive:true}));
+
+/* ================= idle scene (behind start modal) ================= */
+function renderIdle(){
+  updateHUD();
+  paintTiles();
+  setupZone();
+  positionMarker(0.5);
+  setStatus('stReady');
+  setLock(false);
+}
+
+applyLang();
+renderIdle();
+</script>
+</body>
+</html>
